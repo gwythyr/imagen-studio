@@ -36,8 +36,8 @@ export function SessionsList({ onSessionSelect, onNewSession }: SessionsListProp
   }
 
   return (
-    <div style={{ padding: '20px 20px', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div style={{ padding: '20px 20px 20px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
         <h1>Chat Sessions</h1>
         <button
           onClick={onNewSession}
@@ -70,7 +70,7 @@ export function SessionsList({ onSessionSelect, onNewSession }: SessionsListProp
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Title</th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Created</th>
               <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600' }}>Last Message</th>
-              <th style={{ padding: '12px 20px 12px 12px', textAlign: 'right', fontWeight: '600' }}>Messages</th>
+              <th style={{ padding: '12px 30px 12px 12px', textAlign: 'right', fontWeight: '600' }}>Messages</th>
             </tr>
           </thead>
           <tbody>
@@ -95,7 +95,7 @@ export function SessionsList({ onSessionSelect, onNewSession }: SessionsListProp
                 <td style={{ padding: '12px', color: '#666' }}>
                   {formatDateTime(session.stats.lastMessageTimestamp)}
                 </td>
-                <td style={{ padding: '12px 20px 12px 12px', textAlign: 'right', color: '#666' }}>
+                <td style={{ padding: '12px 30px 12px 12px', textAlign: 'right', color: '#666' }}>
                   {session.stats.messageCount}
                 </td>
               </tr>
