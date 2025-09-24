@@ -18,11 +18,8 @@ function App() {
     setCurrentSessionId(sessionId);
   };
 
-  const handleNewSession = async () => {
-    const sessionService = new SessionService();
-    await sessionService.initialize();
-    const newSession = await sessionService.createSession();
-    setCurrentSessionId(newSession.id);
+  const handleNewSession = () => {
+    setCurrentSessionId('temp');
   };
 
   const renderContent = () => {
@@ -32,6 +29,43 @@ function App() {
 
     if (currentView === 'sessions') {
       if (currentSessionId) {
+        if (currentSessionId === 'temp') {
+          const tempSession = {
+            id: 'temp',
+            title: null,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+
+          return (
+            <div style={{ position: 'relative', height: '100vh' }}>
+              <button
+                onClick={() => setCurrentSessionId(null)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  left: '20px',
+                  zIndex: 20,
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  color: '#666',
+                  backdropFilter: 'blur(4px)'
+                }}
+              >
+                ← Back to Sessions
+              </button>
+              <Chat
+                session={tempSession}
+                onSessionCreated={setCurrentSessionId}
+              />
+            </div>
+          );
+        }
+
         if (sessionLoading || messagesLoading) {
           return (
             <div style={{
@@ -83,10 +117,7 @@ function App() {
             >
               ← Back to Sessions
             </button>
-            <Chat
-              session={session}
-              messages={messages}
-            />
+            <Chat session={session} />
           </div>
         );
       }

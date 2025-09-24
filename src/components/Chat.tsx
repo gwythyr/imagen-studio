@@ -4,10 +4,11 @@ import { useMessages } from '../hooks/useMessages';
 
 interface ChatProps {
   session: ChatSession;
+  onSessionCreated?: (sessionId: string) => void;
 }
 
-export function Chat({ session }: ChatProps) {
-  const { messages, loading, addMessage } = useMessages(session.id);
+export function Chat({ session, onSessionCreated }: ChatProps) {
+  const { messages, addMessage } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
 
   const formatDate = (timestamp: number) => {
@@ -19,7 +20,28 @@ export function Chat({ session }: ChatProps) {
     if (!content) return;
 
     setInputValue('');
-    await addMessage(content, 'user');
+
+    if (session.id === 'temp') {
+      const { SessionService } = await import('../lib/sessions');
+      const sessionService = new SessionService();
+      await sessionService.initialize();
+      const newSession = await sessionService.createSession();
+
+      const { ChatDatabase } = await import('../lib/database');
+      const db = new ChatDatabase();
+      await db.initialize();
+      await db.addMessage(newSession.id, {
+        content,
+        role: 'user',
+        timestamp: Date.now()
+      });
+
+      if (onSessionCreated) {
+        onSessionCreated(newSession.id);
+      }
+    } else {
+      await addMessage(content, 'user');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
