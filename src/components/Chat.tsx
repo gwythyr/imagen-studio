@@ -9,9 +9,11 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, addMessage, addAudioMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
+  const { messages, addMessage, addAudioMessage, addImageMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
+  const [imageModal, setImageModal] = useState<{ data: Uint8Array; messageId: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { isRecording, audioData, startRecording, stopRecording, clearRecording } = useAudioRecording();
 
   const formatDate = (timestamp: number) => {
@@ -39,7 +41,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
     return { newSession, db };
   };
 
-  const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array }) => {
+  const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array; imageData?: Uint8Array }) => {
     if (session.id === 'temp') {
       const { newSession, db } = await createNewSession();
       await db.addMessage(newSession.id, {
@@ -56,6 +58,8 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
         await addMessage(messageData.content, 'user');
       } else if (messageData.audioData) {
         await addAudioMessage(messageData.audioData);
+      } else if (messageData.imageData) {
+        await addImageMessage(messageData.imageData);
       }
     }
   };
@@ -89,6 +93,56 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
       await startRecording();
     }
   };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const imageData = new Uint8Array(arrayBuffer);
+
+    await handleMessage({ imageData });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImageClick = (imageData: Uint8Array, messageId: string) => {
+    setImageModal({ data: imageData, messageId });
+  };
+
+  const handleDownloadImage = () => {
+    if (!imageModal) return;
+
+    const blob = new Blob([imageModal.data]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `image-${imageModal.messageId}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setImageModal(null);
+      }
+    };
+
+    if (imageModal) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [imageModal]);
 
   return (
     <div style={{
@@ -178,7 +232,21 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
                 if (deleteBtn) deleteBtn.style.opacity = '0';
               }}
               >
-                {message.content || '[Image/Audio message]'}
+                {message.imageData && (
+                  <img
+                    src={URL.createObjectURL(new Blob([message.imageData]))}
+                    alt="Uploaded image"
+                    onClick={() => handleImageClick(message.imageData!, message.id)}
+                    style={{
+                      maxWidth: '400px',
+                      maxHeight: '400px',
+                      borderRadius: '8px',
+                      marginBottom: message.content ? '8px' : '0',
+                      cursor: 'pointer'
+                    }}
+                  />
+                )}
+                {message.content || (message.imageData ? '' : '[Audio message]')}
                 <button
                   className="delete-btn"
                   onClick={() => deleteMessage(message.id)}
@@ -260,33 +328,6 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
           />
 
           <button
-            onClick={handleRecordClick}
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '24px',
-              border: 'none',
-              backgroundColor: isRecording ? '#dc3545' : '#6c757d',
-              color: '#ffffff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-              fontWeight: '600',
-              transition: 'background-color 0.2s ease'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = isRecording ? '#dc3545' : '#6c757d';
-            }}
-          >
-            🎤
-          </button>
-
-          <button
             onClick={handleSubmit}
             disabled={!inputValue.trim()}
             style={{
@@ -315,8 +356,169 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
           >
             ➤
           </button>
+
+          <button
+            onClick={handleRecordClick}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: isRecording ? '#dc3545' : '#6c757d',
+              color: '#ffffff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = isRecording ? '#dc3545' : '#6c757d';
+            }}
+          >
+            🎤
+          </button>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: '#28a745',
+              color: '#ffffff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = '#218838';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = '#28a745';
+            }}
+          >
+            🖼️
+          </button>
         </div>
       </div>
+
+      {imageModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px'
+          }}
+          onClick={() => setImageModal(null)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: 'calc(100vw - 80px)',
+              maxHeight: 'calc(100vh - 80px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={URL.createObjectURL(new Blob([imageModal.data]))}
+              alt="Full size image"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                borderRadius: '8px'
+              }}
+            />
+
+            <button
+              onClick={() => setImageModal(null)}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '20px',
+                border: 'none',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                fontWeight: '600'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+              }}
+            >
+              ×
+            </button>
+
+            <button
+              onClick={handleDownloadImage}
+              style={{
+                position: 'absolute',
+                bottom: '10px',
+                right: '10px',
+                width: '50px',
+                height: '50px',
+                borderRadius: '25px',
+                border: 'none',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+              }}
+            >
+              ⬇️
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
