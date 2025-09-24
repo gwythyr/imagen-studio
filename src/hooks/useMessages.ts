@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatDatabase } from '../lib/database';
 import { type Message } from '../types/chat';
 
@@ -25,5 +25,20 @@ export function useMessages(sessionId: string | null) {
     loadMessages();
   }, [sessionId]);
 
-  return { messages, loading };
+  const addMessage = useCallback(async (content: string, role: 'user' | 'assistant') => {
+    if (!sessionId) return;
+
+    const db = new ChatDatabase();
+    await db.initialize();
+
+    const newMessage = await db.addMessage(sessionId, {
+      content,
+      role,
+      timestamp: Date.now()
+    });
+
+    setMessages(prev => [...prev, newMessage]);
+  }, [sessionId]);
+
+  return { messages, loading, addMessage };
 }

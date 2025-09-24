@@ -1,13 +1,32 @@
-import { type Message, type ChatSession } from '../types/chat';
+import { useState } from 'react';
+import { type ChatSession } from '../types/chat';
+import { useMessages } from '../hooks/useMessages';
 
 interface ChatProps {
   session: ChatSession;
-  messages: Message[];
 }
 
-export function Chat({ session, messages }: ChatProps) {
+export function Chat({ session }: ChatProps) {
+  const { messages, loading, addMessage } = useMessages(session.id);
+  const [inputValue, setInputValue] = useState('');
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
+  };
+
+  const handleSubmit = async () => {
+    const content = inputValue.trim();
+    if (!content) return;
+
+    setInputValue('');
+    await addMessage(content, 'user');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   return (
@@ -73,17 +92,30 @@ export function Chat({ session, messages }: ChatProps) {
 
             <div style={{
               maxWidth: '70%',
-              backgroundColor: message.role === 'user' ? '#1976d2' : '#f5f5f5',
-              color: message.role === 'user' ? '#ffffff' : '#333',
-              padding: '12px 16px',
-              borderRadius: '18px',
-              borderTopLeftRadius: message.role === 'user' ? '18px' : '4px',
-              borderTopRightRadius: message.role === 'user' ? '4px' : '18px',
-              wordWrap: 'break-word',
-              fontSize: '14px',
-              lineHeight: '1.4'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
             }}>
-              {message.content || '[Image/Audio message]'}
+              <div style={{
+                backgroundColor: message.role === 'user' ? '#1976d2' : '#f5f5f5',
+                color: message.role === 'user' ? '#ffffff' : '#333',
+                padding: '12px 16px',
+                borderRadius: '18px',
+                borderTopLeftRadius: message.role === 'user' ? '18px' : '4px',
+                borderTopRightRadius: message.role === 'user' ? '4px' : '18px',
+                wordWrap: 'break-word',
+                fontSize: '14px',
+                lineHeight: '1.4'
+              }}>
+                {message.content || '[Image/Audio message]'}
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: '#999',
+                textAlign: message.role === 'user' ? 'right' : 'left'
+              }}>
+                {formatDate(message.timestamp)}
+              </div>
             </div>
           </div>
         ))}
@@ -102,6 +134,9 @@ export function Chat({ session, messages }: ChatProps) {
           <input
             type="text"
             placeholder="Type a message..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
             style={{
               flex: 1,
               padding: '12px 16px',
@@ -121,14 +156,16 @@ export function Chat({ session, messages }: ChatProps) {
           />
 
           <button
+            onClick={handleSubmit}
+            disabled={!inputValue.trim()}
             style={{
               width: '48px',
               height: '48px',
               borderRadius: '24px',
               border: 'none',
-              backgroundColor: '#1976d2',
+              backgroundColor: inputValue.trim() ? '#1976d2' : '#ccc',
               color: '#ffffff',
-              cursor: 'pointer',
+              cursor: inputValue.trim() ? 'pointer' : 'not-allowed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -137,13 +174,15 @@ export function Chat({ session, messages }: ChatProps) {
               transition: 'background-color 0.2s ease'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#1565c0';
+              if (inputValue.trim()) {
+                e.currentTarget.style.backgroundColor = '#1565c0';
+              }
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = '#1976d2';
+              e.currentTarget.style.backgroundColor = inputValue.trim() ? '#1976d2' : '#ccc';
             }}
           >
-            🎤
+            ➤
           </button>
         </div>
       </div>
