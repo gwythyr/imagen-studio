@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
+import { Chat } from './components/Chat';
 import { SessionService } from './lib/sessions';
+import { useSession } from './hooks/useSession';
+import { useMessages } from './hooks/useMessages';
 
 function App() {
   const [currentView, setCurrentView] = useState<'sessions' | 'settings'>('sessions');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  const { session, loading: sessionLoading } = useSession(currentSessionId);
+  const { messages, loading: messagesLoading } = useMessages(currentSessionId);
 
   const handleSessionSelect = (sessionId: string) => {
     setCurrentSessionId(sessionId);
@@ -26,26 +32,61 @@ function App() {
 
     if (currentView === 'sessions') {
       if (currentSessionId) {
+        if (sessionLoading || messagesLoading) {
+          return (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh',
+              fontSize: '16px',
+              color: '#666'
+            }}>
+              Loading...
+            </div>
+          );
+        }
+
+        if (!session) {
+          return (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh',
+              fontSize: '16px',
+              color: '#666'
+            }}>
+              Session not found
+            </div>
+          );
+        }
+
         return (
-          <div style={{ padding: '20px' }}>
+          <div style={{ position: 'relative', height: '100vh' }}>
             <button
               onClick={() => setCurrentSessionId(null)}
               style={{
-                marginBottom: '20px',
-                backgroundColor: 'transparent',
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                zIndex: 20,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
                 border: '1px solid #dee2e6',
                 borderRadius: '6px',
                 padding: '8px 16px',
                 cursor: 'pointer',
                 fontSize: '14px',
-                color: '#666'
+                color: '#666',
+                backdropFilter: 'blur(4px)'
               }}
             >
               ← Back to Sessions
             </button>
-            <div>
-              Chat interface for session {currentSessionId} would go here
-            </div>
+            <Chat
+              session={session}
+              messages={messages}
+            />
           </div>
         );
       }

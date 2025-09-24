@@ -28,3 +28,4 @@ React + TypeScript chat application with local SQLite storage:
 - No try/catch blocks - let errors bubble up
 - Keep components simple and focused on single responsibility
 - separate concerns, don't mix logic with ui and styles, follow best react practices for this
+- Use custom hooks with subscriptions to keep components reactive to SQLite data changes
