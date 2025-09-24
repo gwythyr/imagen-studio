@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { type ChatSession } from '../types/chat';
 import { useMessages } from '../hooks/useMessages';
 
@@ -10,10 +10,19 @@ interface ChatProps {
 export function Chat({ session, onSessionCreated }: ChatProps) {
   const { messages, addMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async () => {
     const content = inputValue.trim();
@@ -183,6 +192,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       <div style={{
