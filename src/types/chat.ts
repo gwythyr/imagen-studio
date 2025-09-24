@@ -19,3 +19,12 @@ export interface SessionStats {
   messageCount: number;
   lastMessageTimestamp: number | null;
 }
+
+export interface ImageRecord {
+  id: string;
+  data: Uint8Array;
+  mimeType: string;
+  filename: string | null;
+  size: number;
+  createdAt: number;
+}

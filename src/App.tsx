@@ -3,7 +3,6 @@ import { Layout } from './components/Layout';
 import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
 import { Chat } from './components/Chat';
-import { SessionService } from './lib/sessions';
 import { useSession } from './hooks/useSession';
 import { useMessages } from './hooks/useMessages';
 

@@ -1,5 +1,5 @@
 import initSqlJs, { type Database } from 'sql.js';
-import { type Message, type ChatSession, type SessionStats } from '../types/chat';
+import { type Message, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
 
 export class ChatDatabase {
   private db: Database | null = null;
@@ -29,14 +29,24 @@ export class ChatDatabase {
         updated_at INTEGER NOT NULL
       );
 
+      CREATE TABLE images (
+        id TEXT PRIMARY KEY,
+        data BLOB NOT NULL,
+        mime_type TEXT NOT NULL,
+        filename TEXT,
+        size INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+
       CREATE TABLE messages (
         id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
         content TEXT,
         role TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
-        image_data BLOB,
-        audio_data BLOB
+        image_id TEXT,
+        audio_data BLOB,
+        FOREIGN KEY (image_id) REFERENCES images (id)
       );
     `);
 
@@ -72,15 +82,24 @@ export class ChatDatabase {
       ...message
     };
 
+    let imageId: string | null = null;
+    if (fullMessage.imageData) {
+      imageId = await this.createImage({
+        data: fullMessage.imageData,
+        mimeType: 'image/jpeg',
+        size: fullMessage.imageData.length
+      });
+    }
+
     this.db!.run(
-      'INSERT INTO messages (id, session_id, content, role, timestamp, image_data, audio_data) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO messages (id, session_id, content, role, timestamp, image_id, audio_data) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         fullMessage.id,
         sessionId,
         fullMessage.content || null,
         fullMessage.role,
         fullMessage.timestamp,
-        fullMessage.imageData || null,
+        imageId,
         fullMessage.audioData || null
       ]
     );
@@ -90,15 +109,20 @@ export class ChatDatabase {
       [Date.now(), sessionId]
     );
 
-
     this.save();
     return fullMessage;
   }
 
   async getMessages(sessionId: string): Promise<Message[]> {
-    const stmt = this.db!.prepare(
-      'SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp ASC'
-    );
+    const stmt = this.db!.prepare(`
+      SELECT
+        m.*,
+        i.data as image_data
+      FROM messages m
+      LEFT JOIN images i ON m.image_id = i.id
+      WHERE m.session_id = ?
+      ORDER BY m.timestamp ASC
+    `);
     stmt.bind([sessionId]);
 
     const messages: Message[] = [];
@@ -139,6 +163,50 @@ export class ChatDatabase {
 
   async deleteMessage(messageId: string): Promise<void> {
     this.db!.run('DELETE FROM messages WHERE id = ?', [messageId]);
+    this.save();
+  }
+
+  async createImage(imageData: { data: Uint8Array; mimeType: string; filename?: string; size: number }): Promise<string> {
+    const imageId = crypto.randomUUID();
+
+    this.db!.run(
+      'INSERT INTO images (id, data, mime_type, filename, size, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        imageId,
+        imageData.data,
+        imageData.mimeType,
+        imageData.filename || null,
+        imageData.size,
+        Date.now()
+      ]
+    );
+
+    return imageId;
+  }
+
+  async getImage(imageId: string): Promise<ImageRecord | null> {
+    const stmt = this.db!.prepare('SELECT * FROM images WHERE id = ?');
+    stmt.bind([imageId]);
+
+    let image: ImageRecord | null = null;
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      image = {
+        id: row.id as string,
+        data: new Uint8Array(row.data as ArrayBuffer),
+        mimeType: row.mime_type as string,
+        filename: row.filename as string | null,
+        size: row.size as number,
+        createdAt: row.created_at as number
+      };
+    }
+
+    stmt.free();
+    return image;
+  }
+
+  async deleteImage(imageId: string): Promise<void> {
+    this.db!.run('DELETE FROM images WHERE id = ?', [imageId]);
     this.save();
   }
 
