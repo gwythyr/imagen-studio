@@ -40,5 +40,15 @@ export function useMessages(sessionId: string | null) {
     setMessages(prev => [...prev, newMessage]);
   }, [sessionId]);
 
-  return { messages, loading, addMessage };
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!sessionId) return;
+
+    const db = new ChatDatabase();
+    await db.initialize();
+    await db.deleteMessage(messageId);
+
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+  }, [sessionId]);
+
+  return { messages, loading, addMessage, deleteMessage };
 }

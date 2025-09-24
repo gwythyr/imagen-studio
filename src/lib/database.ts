@@ -137,6 +137,11 @@ export class ChatDatabase {
     return sessions;
   }
 
+  async deleteMessage(messageId: string): Promise<void> {
+    this.db!.run('DELETE FROM messages WHERE id = ?', [messageId]);
+    this.save();
+  }
+
   async getSessionStats(sessionId: string): Promise<SessionStats> {
     const stmt = this.db!.prepare(`
       SELECT

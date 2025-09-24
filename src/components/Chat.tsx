@@ -8,7 +8,7 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, addMessage } = useMessages(session.id === 'temp' ? null : session.id);
+  const { messages, addMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
 
   const formatDate = (timestamp: number) => {
@@ -119,6 +119,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               gap: '4px'
             }}>
               <div style={{
+                position: 'relative',
                 backgroundColor: message.role === 'user' ? '#1976d2' : '#f5f5f5',
                 color: message.role === 'user' ? '#ffffff' : '#333',
                 padding: '12px 16px',
@@ -128,8 +129,49 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
                 wordWrap: 'break-word',
                 fontSize: '14px',
                 lineHeight: '1.4'
-              }}>
+              }}
+              onMouseEnter={e => {
+                const deleteBtn = e.currentTarget.querySelector('.delete-btn') as HTMLElement;
+                if (deleteBtn) deleteBtn.style.opacity = '1';
+              }}
+              onMouseLeave={e => {
+                const deleteBtn = e.currentTarget.querySelector('.delete-btn') as HTMLElement;
+                if (deleteBtn) deleteBtn.style.opacity = '0';
+              }}
+              >
                 {message.content || '[Image/Audio message]'}
+                <button
+                  className="delete-btn"
+                  onClick={() => deleteMessage(message.id)}
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: message.role === 'user' ? '4px' : 'auto',
+                    left: message.role === 'user' ? 'auto' : '4px',
+                    width: '20px',
+                    height: '20px',
+                    border: 'none',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    color: message.role === 'user' ? '#ffffff' : '#666',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: '0',
+                    transition: 'opacity 0.2s ease',
+                    padding: '0'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+                  }}
+                >
+                  ×
+                </button>
               </div>
               <div style={{
                 fontSize: '11px',
