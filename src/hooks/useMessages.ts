@@ -40,6 +40,21 @@ export function useMessages(sessionId: string | null) {
     setMessages(prev => [...prev, newMessage]);
   }, [sessionId]);
 
+  const addAudioMessage = useCallback(async (audioData: Uint8Array, role: 'user' | 'assistant' = 'user') => {
+    if (!sessionId) return;
+
+    const db = new ChatDatabase();
+    await db.initialize();
+
+    const newMessage = await db.addMessage(sessionId, {
+      role,
+      timestamp: Date.now(),
+      audioData
+    });
+
+    setMessages(prev => [...prev, newMessage]);
+  }, [sessionId]);
+
   const deleteMessage = useCallback(async (messageId: string) => {
     if (!sessionId) return;
 
@@ -50,5 +65,5 @@ export function useMessages(sessionId: string | null) {
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
   }, [sessionId]);
 
-  return { messages, loading, addMessage, deleteMessage };
+  return { messages, loading, addMessage, addAudioMessage, deleteMessage };
 }

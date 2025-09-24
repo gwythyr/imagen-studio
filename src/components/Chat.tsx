@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { type ChatSession } from '../types/chat';
 import { useMessages } from '../hooks/useMessages';
+import { useAudioRecording } from '../hooks/useAudioRecording';
 
 interface ChatProps {
   session: ChatSession;
@@ -8,9 +9,10 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, addMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
+  const { messages, addMessage, addAudioMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { isRecording, audioData, startRecording, stopRecording, clearRecording } = useAudioRecording();
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString();
@@ -24,39 +26,67 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async () => {
-    const content = inputValue.trim();
-    if (!content) return;
+  const createNewSession = async () => {
+    const { SessionService } = await import('../lib/sessions');
+    const sessionService = new SessionService();
+    await sessionService.initialize();
+    const newSession = await sessionService.createSession();
 
-    setInputValue('');
+    const { ChatDatabase } = await import('../lib/database');
+    const db = new ChatDatabase();
+    await db.initialize();
 
+    return { newSession, db };
+  };
+
+  const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array }) => {
     if (session.id === 'temp') {
-      const { SessionService } = await import('../lib/sessions');
-      const sessionService = new SessionService();
-      await sessionService.initialize();
-      const newSession = await sessionService.createSession();
-
-      const { ChatDatabase } = await import('../lib/database');
-      const db = new ChatDatabase();
-      await db.initialize();
+      const { newSession, db } = await createNewSession();
       await db.addMessage(newSession.id, {
-        content,
         role: 'user',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ...messageData
       });
 
       if (onSessionCreated) {
         onSessionCreated(newSession.id);
       }
     } else {
-      await addMessage(content, 'user');
+      if (messageData.content) {
+        await addMessage(messageData.content, 'user');
+      } else if (messageData.audioData) {
+        await addAudioMessage(messageData.audioData);
+      }
     }
+  };
+
+  useEffect(() => {
+    if (audioData && !isRecording) {
+      handleMessage({ audioData }).then(() => clearRecording());
+    }
+  }, [audioData, isRecording, handleMessage, clearRecording]);
+
+  const handleSubmit = async () => {
+    const content = inputValue.trim();
+    if (!content) return;
+
+    setInputValue('');
+    await handleMessage({ content });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
+    }
+  };
+
+  const handleRecordClick = async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      clearRecording();
+      await startRecording();
     }
   };
 
@@ -228,6 +258,33 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               e.target.style.borderColor = '#dee2e6';
             }}
           />
+
+          <button
+            onClick={handleRecordClick}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: isRecording ? '#dc3545' : '#6c757d',
+              color: '#ffffff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = isRecording ? '#dc3545' : '#6c757d';
+            }}
+          >
+            🎤
+          </button>
 
           <button
             onClick={handleSubmit}
