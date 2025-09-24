@@ -27,3 +27,4 @@ React + TypeScript chat application with local SQLite storage:
 - Direct Gemini API calls from browser
 - No try/catch blocks - let errors bubble up
 - Keep components simple and focused on single responsibility
+- separate concerns, don't mix logic with ui and styles, follow best react practices for this

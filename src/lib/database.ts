@@ -1,5 +1,5 @@
 import initSqlJs, { type Database } from 'sql.js';
-import { type Message, type ChatSession } from '../types/chat';
+import { type Message, type ChatSession, type SessionStats } from '../types/chat';
 
 export class ChatDatabase {
   private db: Database | null = null;
@@ -32,7 +32,7 @@ export class ChatDatabase {
       CREATE TABLE messages (
         id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
-        content TEXT NOT NULL,
+        content TEXT,
         role TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
         image_data BLOB,
@@ -77,7 +77,7 @@ export class ChatDatabase {
       [
         fullMessage.id,
         sessionId,
-        fullMessage.content,
+        fullMessage.content || null,
         fullMessage.role,
         fullMessage.timestamp,
         fullMessage.imageData || null,
@@ -135,5 +135,32 @@ export class ChatDatabase {
 
     stmt.free();
     return sessions;
+  }
+
+  async getSessionStats(sessionId: string): Promise<SessionStats> {
+    const stmt = this.db!.prepare(`
+      SELECT
+        COUNT(*) as message_count,
+        MAX(timestamp) as last_message_timestamp
+      FROM messages
+      WHERE session_id = ?
+    `);
+    stmt.bind([sessionId]);
+
+    let messageCount = 0;
+    let lastMessageTimestamp = null;
+
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      messageCount = row.message_count as number;
+      lastMessageTimestamp = row.last_message_timestamp as number | null;
+    }
+
+    stmt.free();
+    return {
+      sessionId,
+      messageCount,
+      lastMessageTimestamp
+    };
   }
 }

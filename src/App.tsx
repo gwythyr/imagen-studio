@@ -1,35 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { Layout } from './components/Layout';
+import { SessionsList } from './components/SessionsList';
+import { Settings } from './components/Settings';
+import { SessionService } from './lib/sessions';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentView, setCurrentView] = useState<'sessions' | 'settings'>('sessions');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  const handleSessionSelect = (sessionId: string) => {
+    setCurrentSessionId(sessionId);
+  };
+
+  const handleNewSession = async () => {
+    const sessionService = new SessionService();
+    await sessionService.initialize();
+    const newSession = await sessionService.createSession();
+    setCurrentSessionId(newSession.id);
+  };
+
+  const renderContent = () => {
+    if (currentView === 'settings') {
+      return <Settings />;
+    }
+
+    if (currentView === 'sessions') {
+      if (currentSessionId) {
+        return (
+          <div style={{ padding: '20px' }}>
+            <button
+              onClick={() => setCurrentSessionId(null)}
+              style={{
+                marginBottom: '20px',
+                backgroundColor: 'transparent',
+                border: '1px solid #dee2e6',
+                borderRadius: '6px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#666'
+              }}
+            >
+              ← Back to Sessions
+            </button>
+            <div>
+              Chat interface for session {currentSessionId} would go here
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <SessionsList
+          onSessionSelect={handleSessionSelect}
+          onNewSession={handleNewSession}
+        />
+      );
+    }
+
+    return null;
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Layout currentView={currentView} onViewChange={setCurrentView}>
+      {renderContent()}
+    </Layout>
+  );
 }
 
-export default App
+export default App;

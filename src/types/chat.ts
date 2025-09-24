@@ -1,6 +1,6 @@
 export interface Message {
   id: string;
-  content: string;
+  content?: string;
   role: 'user' | 'assistant';
   timestamp: number;
   imageData?: Uint8Array;
@@ -12,4 +12,10 @@ export interface ChatSession {
   title: string | null;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface SessionStats {
+  sessionId: string;
+  messageCount: number;
+  lastMessageTimestamp: number | null;
 }
