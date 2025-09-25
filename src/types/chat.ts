@@ -5,6 +5,7 @@ export interface Message {
   timestamp: number;
   imageData?: Uint8Array;
   audioData?: Uint8Array;
+  sentToAi?: boolean;
 }
 
 export interface ChatSession {

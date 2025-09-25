@@ -193,7 +193,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               width: '32px',
               height: '32px',
               borderRadius: '16px',
-              backgroundColor: message.role === 'user' ? '#1976d2' : '#e0e0e0',
+              backgroundColor: message.role === 'user' ? (message.sentToAi === false ? '#9e9e9e' : '#1976d2') : '#e0e0e0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -213,7 +213,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
             }}>
               <div style={{
                 position: 'relative',
-                backgroundColor: message.role === 'user' ? '#1976d2' : '#f5f5f5',
+                backgroundColor: message.role === 'user' ? (message.sentToAi === false ? '#9e9e9e' : '#1976d2') : '#f5f5f5',
                 color: message.role === 'user' ? '#ffffff' : '#333',
                 padding: '12px 16px',
                 borderRadius: '18px',

@@ -46,6 +46,7 @@ export class ChatDatabase {
         timestamp INTEGER NOT NULL,
         image_id TEXT,
         audio_data BLOB,
+        sent_to_ai INTEGER DEFAULT 0,
         FOREIGN KEY (image_id) REFERENCES images (id)
       );
     `);
@@ -91,8 +92,10 @@ export class ChatDatabase {
       });
     }
 
+    const sentToAi = fullMessage.role === 'user' ? (fullMessage.sentToAi ? 1 : 0) : 1;
+
     this.db!.run(
-      'INSERT INTO messages (id, session_id, content, role, timestamp, image_id, audio_data) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO messages (id, session_id, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [
         fullMessage.id,
         sessionId,
@@ -100,7 +103,8 @@ export class ChatDatabase {
         fullMessage.role,
         fullMessage.timestamp,
         imageId,
-        fullMessage.audioData || null
+        fullMessage.audioData || null,
+        sentToAi
       ]
     );
 
@@ -135,7 +139,8 @@ export class ChatDatabase {
         role: row.role as 'user' | 'assistant',
         timestamp: row.timestamp as number,
         imageData: row.image_data ? new Uint8Array(row.image_data as ArrayBuffer) : undefined,
-        audioData: row.audio_data ? new Uint8Array(row.audio_data as ArrayBuffer) : undefined
+        audioData: row.audio_data ? new Uint8Array(row.audio_data as ArrayBuffer) : undefined,
+        sentToAi: Boolean(row.sent_to_ai)
       });
     }
 
