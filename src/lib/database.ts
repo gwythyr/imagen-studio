@@ -14,6 +14,7 @@ export class ChatDatabase {
     if (savedDb) {
       const buffer = new Uint8Array(JSON.parse(savedDb));
       this.db = new SQL.Database(buffer);
+      this.runMigrations();
     } else {
       this.db = new SQL.Database();
       this.createTables();
@@ -49,9 +50,30 @@ export class ChatDatabase {
         sent_to_ai INTEGER DEFAULT 0,
         FOREIGN KEY (image_id) REFERENCES images (id)
       );
+
+      CREATE TABLE settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      );
     `);
 
     this.save();
+  }
+
+  private runMigrations(): void {
+    const stmt = this.db!.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'");
+    const hasSettingsTable = stmt.step();
+    stmt.free();
+
+    if (!hasSettingsTable) {
+      this.db!.exec(`
+        CREATE TABLE settings (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        );
+      `);
+      this.save();
+    }
   }
 
   private save(): void {
@@ -240,5 +262,35 @@ export class ChatDatabase {
       messageCount,
       lastMessageTimestamp
     };
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    const stmt = this.db!.prepare('SELECT value FROM settings WHERE key = ?');
+    stmt.bind([key]);
+
+    let value: string | null = null;
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      value = row.value as string;
+    }
+
+    stmt.free();
+    return value;
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    this.db!.run(
+      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      [key, value]
+    );
+    this.save();
+  }
+
+  async getGeminiApiKey(): Promise<string | null> {
+    return this.getSetting('gemini_api_key');
+  }
+
+  async setGeminiApiKey(apiKey: string): Promise<void> {
+    await this.setSetting('gemini_api_key', apiKey);
   }
 }
