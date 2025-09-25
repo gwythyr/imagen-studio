@@ -32,9 +32,11 @@ export function useMessages(sessionId: string | null) {
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
+      type: 'text' as const,
       content,
       role,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      sentToAi: role === 'user' ? false : undefined
     });
 
     setMessages(prev => [...prev, newMessage]);
@@ -47,9 +49,11 @@ export function useMessages(sessionId: string | null) {
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
+      type: 'audio' as const,
       role,
       timestamp: Date.now(),
-      audioData
+      audioData,
+      sentToAi: role === 'user' ? false : undefined
     });
 
     setMessages(prev => [...prev, newMessage]);
@@ -62,9 +66,11 @@ export function useMessages(sessionId: string | null) {
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
+      type: 'image' as const,
       role,
       timestamp: Date.now(),
-      imageData
+      imageData,
+      sentToAi: role === 'user' ? false : undefined
     });
 
     setMessages(prev => [...prev, newMessage]);

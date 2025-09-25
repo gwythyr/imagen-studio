@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { type ChatSession } from '../types/chat';
+import {type ChatSession, type MessageType} from '../types/chat';
 import { useMessages } from '../hooks/useMessages';
 import { useAudioRecording } from '../hooks/useAudioRecording';
 
@@ -44,9 +44,12 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
   const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array; imageData?: Uint8Array }) => {
     if (session.id === 'temp') {
       const { newSession, db } = await createNewSession();
+      const type: MessageType = messageData.imageData ? 'image' : messageData.audioData ? 'audio' : 'text';
       await db.addMessage(newSession.id, {
+        type: type,
         role: 'user',
         timestamp: Date.now(),
+        sentToAi: false,
         ...messageData
       });
 

@@ -1,5 +1,5 @@
 import initSqlJs, { type Database } from 'sql.js';
-import { type Message, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
+import { type Message, type MessageType, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
 
 export class ChatDatabase {
   private db: Database | null = null;
@@ -14,7 +14,6 @@ export class ChatDatabase {
     if (savedDb) {
       const buffer = new Uint8Array(JSON.parse(savedDb));
       this.db = new SQL.Database(buffer);
-      this.runMigrations();
     } else {
       this.db = new SQL.Database();
       this.createTables();
@@ -42,6 +41,7 @@ export class ChatDatabase {
       CREATE TABLE messages (
         id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'text',
         content TEXT,
         role TEXT NOT NULL,
         timestamp INTEGER NOT NULL,
@@ -60,21 +60,6 @@ export class ChatDatabase {
     this.save();
   }
 
-  private runMigrations(): void {
-    const stmt = this.db!.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'");
-    const hasSettingsTable = stmt.step();
-    stmt.free();
-
-    if (!hasSettingsTable) {
-      this.db!.exec(`
-        CREATE TABLE settings (
-          key TEXT PRIMARY KEY,
-          value TEXT
-        );
-      `);
-      this.save();
-    }
-  }
 
   private save(): void {
     const data = this.db!.export();
@@ -117,10 +102,11 @@ export class ChatDatabase {
     const sentToAi = fullMessage.role === 'user' ? (fullMessage.sentToAi ? 1 : 0) : 1;
 
     this.db!.run(
-      'INSERT INTO messages (id, session_id, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO messages (id, session_id, type, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         fullMessage.id,
         sessionId,
+        fullMessage.type,
         fullMessage.content || null,
         fullMessage.role,
         fullMessage.timestamp,
@@ -157,6 +143,7 @@ export class ChatDatabase {
       const row = stmt.getAsObject();
       messages.push({
         id: row.id as string,
+        type: (row.type as MessageType) || 'text',
         content: row.content as string,
         role: row.role as 'user' | 'assistant',
         timestamp: row.timestamp as number,

@@ -1,5 +1,8 @@
+export type MessageType = 'text' | 'image' | 'image_prompt' | 'audio';
+
 export interface Message {
   id: string;
+  type: MessageType;
   content?: string;
   role: 'user' | 'assistant';
   timestamp: number;
