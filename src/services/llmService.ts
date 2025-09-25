@@ -16,7 +16,7 @@ interface LlmServiceConfig {
 
 export class LlmService {
   private static readonly DEFAULT_MODEL = 'gemini-2.5-pro';
-  private static readonly DEFAULT_THINKING_BUDGET = 0;
+  private static readonly DEFAULT_THINKING_BUDGET = -1;
 
   static async generateResponse(
     apiKey: string,
