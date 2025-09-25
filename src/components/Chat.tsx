@@ -9,11 +9,13 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, addMessage, addAudioMessage, addImageMessage, deleteMessage } = useMessages(session.id === 'temp' ? null : session.id);
+  const { messages, addMessage, addAudioMessage, addImageMessage, deleteMessage, refreshMessages } = useMessages(session.id === 'temp' ? null : session.id);
   const [inputValue, setInputValue] = useState('');
   const [imageModal, setImageModal] = useState<{ data: Uint8Array; messageId: string } | null>(null);
+  const [isApiInProgress, setIsApiInProgress] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const apiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { isRecording, audioData, startRecording, stopRecording, clearRecording } = useAudioRecording();
 
   const formatDate = (timestamp: number) => {
@@ -128,6 +130,40 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  const handleAiClick = async () => {
+    if (isApiInProgress) {
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current);
+        apiTimeoutRef.current = null;
+      }
+      setIsApiInProgress(false);
+      return;
+    }
+
+    if (session.id === 'temp') return;
+
+    setIsApiInProgress(true);
+
+    const { ChatDatabase } = await import('../lib/database');
+    const db = new ChatDatabase();
+    await db.initialize();
+    await db.markSessionMessagesAsSent(session.id);
+    await refreshMessages();
+
+    apiTimeoutRef.current = setTimeout(() => {
+      setIsApiInProgress(false);
+      apiTimeoutRef.current = null;
+    }, 5000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -312,6 +348,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
+            disabled={isApiInProgress}
             style={{
               flex: 1,
               padding: '12px 16px',
@@ -320,10 +357,14 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               fontSize: '14px',
               outline: 'none',
               resize: 'none',
-              fontFamily: 'inherit'
+              fontFamily: 'inherit',
+              opacity: isApiInProgress ? '0.5' : '1',
+              cursor: isApiInProgress ? 'not-allowed' : 'text'
             }}
             onFocus={e => {
-              e.target.style.borderColor = '#1976d2';
+              if (!isApiInProgress) {
+                e.target.style.borderColor = '#1976d2';
+              }
             }}
             onBlur={e => {
               e.target.style.borderColor = '#dee2e6';
@@ -332,29 +373,30 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
 
           <button
             onClick={handleSubmit}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isApiInProgress}
             style={{
               width: '48px',
               height: '48px',
               borderRadius: '24px',
               border: 'none',
-              backgroundColor: inputValue.trim() ? '#1976d2' : '#ccc',
+              backgroundColor: (!inputValue.trim() || isApiInProgress) ? '#ccc' : '#1976d2',
               color: '#ffffff',
-              cursor: inputValue.trim() ? 'pointer' : 'not-allowed',
+              cursor: (!inputValue.trim() || isApiInProgress) ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '16px',
               fontWeight: '600',
-              transition: 'background-color 0.2s ease'
+              transition: 'background-color 0.2s ease',
+              opacity: isApiInProgress ? '0.5' : '1'
             }}
             onMouseEnter={e => {
-              if (inputValue.trim()) {
+              if (inputValue.trim() && !isApiInProgress) {
                 e.currentTarget.style.backgroundColor = '#1565c0';
               }
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = inputValue.trim() ? '#1976d2' : '#ccc';
+              e.currentTarget.style.backgroundColor = (!inputValue.trim() || isApiInProgress) ? '#ccc' : '#1976d2';
             }}
           >
             ➤
@@ -362,6 +404,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
 
           <button
             onClick={handleRecordClick}
+            disabled={isApiInProgress}
             style={{
               width: '48px',
               height: '48px',
@@ -369,16 +412,19 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               border: 'none',
               backgroundColor: isRecording ? '#dc3545' : '#6c757d',
               color: '#ffffff',
-              cursor: 'pointer',
+              cursor: isApiInProgress ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '16px',
               fontWeight: '600',
-              transition: 'background-color 0.2s ease'
+              transition: 'background-color 0.2s ease',
+              opacity: isApiInProgress ? '0.5' : '1'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
+              if (!isApiInProgress) {
+                e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
+              }
             }}
             onMouseLeave={e => {
               e.currentTarget.style.backgroundColor = isRecording ? '#dc3545' : '#6c757d';
@@ -393,10 +439,12 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
             onChange={handleImageSelect}
             style={{ display: 'none' }}
             ref={fileInputRef}
+            disabled={isApiInProgress}
           />
 
           <button
             onClick={() => fileInputRef.current?.click()}
+            disabled={isApiInProgress}
             style={{
               width: '48px',
               height: '48px',
@@ -404,22 +452,56 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
               border: 'none',
               backgroundColor: '#28a745',
               color: '#ffffff',
-              cursor: 'pointer',
+              cursor: isApiInProgress ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '16px',
               fontWeight: '600',
-              transition: 'background-color 0.2s ease'
+              transition: 'background-color 0.2s ease',
+              opacity: isApiInProgress ? '0.5' : '1'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#218838';
+              if (!isApiInProgress) {
+                e.currentTarget.style.backgroundColor = '#218838';
+              }
             }}
             onMouseLeave={e => {
               e.currentTarget.style.backgroundColor = '#28a745';
             }}
           >
             🖼️
+          </button>
+
+          <button
+            onClick={handleAiClick}
+            disabled={session.id === 'temp'}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '24px',
+              border: 'none',
+              backgroundColor: isApiInProgress ? '#dc3545' : '#007bff',
+              color: '#ffffff',
+              cursor: session.id === 'temp' ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: '600',
+              transition: 'background-color 0.2s ease',
+              opacity: session.id === 'temp' ? '0.5' : '1'
+            }}
+            onMouseEnter={e => {
+              if (session.id !== 'temp') {
+                e.currentTarget.style.backgroundColor = isApiInProgress ? '#c82333' : '#0056b3';
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = isApiInProgress ? '#dc3545' : '#007bff';
+            }}
+          >
+            {isApiInProgress ? '⏸️' : '🤖'}
           </button>
         </div>
       </div>

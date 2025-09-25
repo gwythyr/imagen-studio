@@ -280,4 +280,12 @@ export class ChatDatabase {
   async setGeminiApiKey(apiKey: string): Promise<void> {
     await this.setSetting('gemini_api_key', apiKey);
   }
+
+  async markSessionMessagesAsSent(sessionId: string): Promise<void> {
+    this.db!.run(
+      'UPDATE messages SET sent_to_ai = 1 WHERE session_id = ? AND role = ?',
+      [sessionId, 'user']
+    );
+    this.save();
+  }
 }

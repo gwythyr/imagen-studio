@@ -86,5 +86,14 @@ export function useMessages(sessionId: string | null) {
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
   }, [sessionId]);
 
-  return { messages, loading, addMessage, addAudioMessage, addImageMessage, deleteMessage };
+  const refreshMessages = useCallback(async () => {
+    if (!sessionId) return;
+
+    const db = new ChatDatabase();
+    await db.initialize();
+    const sessionMessages = await db.getMessages(sessionId);
+    setMessages(sessionMessages);
+  }, [sessionId]);
+
+  return { messages, loading, addMessage, addAudioMessage, addImageMessage, deleteMessage, refreshMessages };
 }
