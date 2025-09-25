@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as Sentry from "@sentry/react";
 import { Layout } from './components/Layout';
 import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
@@ -137,4 +138,34 @@ function App() {
   );
 }
 
-export default App;
+export default Sentry.withErrorBoundary(App, {
+  fallback: ({ resetError }) => (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      padding: '20px',
+      textAlign: 'center'
+    }}>
+      <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Something went wrong</h2>
+      <p style={{ color: '#666', marginBottom: '20px' }}>
+        An error occurred. Our team has been notified.
+      </p>
+      <button
+        onClick={resetError}
+        style={{
+          backgroundColor: '#3498db',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Try again
+      </button>
+    </div>
+  )
+});
