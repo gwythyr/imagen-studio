@@ -42,13 +42,6 @@ class DatabaseWorker {
 
       const path = '/sql/imagen-studio.sqlite';
 
-      // Handle fallback for browsers without SharedArrayBuffer
-      if (typeof SharedArrayBuffer === 'undefined') {
-        const stream = SQL.FS.open(path, 'a+');
-        await stream.node.contents.readIfFallback();
-        SQL.FS.close(stream);
-      }
-
       // Open the database
       this.db = new SQL.Database(path, { filename: true });
 
