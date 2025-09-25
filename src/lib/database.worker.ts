@@ -34,6 +34,10 @@ class DatabaseWorker {
     return this.sessions.getAll();
   }
 
+  async getSession(sessionId: string): Promise<ChatSession | null> {
+    return this.sessions.get(sessionId);
+  }
+
   async updateSession(sessionId: string, updates: Partial<Pick<ChatSession, 'title'>>): Promise<void> {
     return this.sessions.update(sessionId, updates);
   }

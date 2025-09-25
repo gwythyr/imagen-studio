@@ -18,6 +18,7 @@ export interface DatabaseMethods {
   addMessage: (sessionId: string, message: Omit<Message, 'id'>) => Promise<Message>;
   getMessages: (sessionId: string) => Promise<Message[]>;
   getSessions: () => Promise<ChatSession[]>;
+  getSession: (sessionId: string) => Promise<ChatSession | null>;
   deleteMessage: (messageId: string) => Promise<void>;
   createImage: (imageData: { data: Uint8Array; mimeType: string; filename?: string; size: number }) => Promise<string>;
   getImage: (imageId: string) => Promise<ImageRecord | null>;

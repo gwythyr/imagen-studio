@@ -42,6 +42,26 @@ export class SessionService {
     return sessions;
   }
 
+  async get(sessionId: string): Promise<ChatSession | null> {
+    const db = this.conn.getDb();
+    const result = db.exec({
+      sql: 'SELECT * FROM sessions WHERE id = ?',
+      bind: [sessionId],
+      returnValue: 'resultRows',
+      columnNames: true
+    });
+
+    if (result.length === 0) return null;
+
+    const row = result[0];
+    return {
+      id: row[0] as string,
+      title: row[1] as string,
+      createdAt: row[2] as number,
+      updatedAt: row[3] as number
+    };
+  }
+
   async update(sessionId: string, updates: Partial<Pick<ChatSession, 'title'>>): Promise<void> {
     if (updates.title !== undefined) {
       const db = this.conn.getDb();

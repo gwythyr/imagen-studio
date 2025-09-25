@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { type ChatSession } from '../types/chat';
 import { useChat } from '../hooks/useChat';
+import { useChatTitle } from '../hooks/useChatTitle';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { ImageModal } from './ImageModal';
@@ -13,6 +14,7 @@ interface ChatProps {
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
   const { messages, deleteMessage, handleMessage, handleAiClick, isApiInProgress, generateImageFromPrompt, isImageGenerating } = useChat({ session, onSessionCreated });
+  const title = useChatTitle({ sessionId: session.id, initialTitle: session.title });
   const [imageModal, setImageModal] = useState<{ data: Uint8Array; messageId: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -74,9 +76,9 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
           margin: '0 0 8px 0',
           fontSize: '24px',
           fontWeight: '600',
-          color: session.title ? 'var(--text-primary)' : 'var(--text-muted)'
+          color: title ? 'var(--text-primary)' : 'var(--text-muted)'
         }}>
-          {session.title ?? 'Untitled Chat'}
+          {title ?? 'Untitled Chat'}
         </h1>
         <div style={{
           fontSize: '14px',

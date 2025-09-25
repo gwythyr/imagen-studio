@@ -2,13 +2,14 @@
 import { type Message, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
 import { type DatabaseWorkerRequest, type DatabaseWorkerResponse, type DatabaseMethods } from './database-types';
 
-export class ChatDatabase implements DatabaseMethods {
+export class ChatDatabase extends EventTarget implements DatabaseMethods {
   private worker: Worker | null = null;
   private requestId = 0;
   private pendingRequests = new Map<string, { resolve: (value: any) => void; reject: (error: Error) => void }>();
   private initialized = false;
 
   constructor() {
+    super();
     this.initializeWorker();
   }
 
@@ -86,6 +87,10 @@ export class ChatDatabase implements DatabaseMethods {
     return this.callWorkerMethod('getSessions');
   }
 
+  async getSession(sessionId: string): Promise<ChatSession | null> {
+    return this.callWorkerMethod('getSession', sessionId);
+  }
+
   async deleteMessage(messageId: string): Promise<void> {
     return this.callWorkerMethod('deleteMessage', messageId);
   }
@@ -127,7 +132,8 @@ export class ChatDatabase implements DatabaseMethods {
   }
 
   async updateSession(sessionId: string, updates: Partial<Pick<ChatSession, 'title'>>): Promise<void> {
-    return this.callWorkerMethod('updateSession', sessionId, updates);
+    await this.callWorkerMethod('updateSession', sessionId, updates);
+    this.dispatchEvent(new CustomEvent('sessionUpdated', { detail: { sessionId, updates } }));
   }
 
   // Cleanup method to terminate worker when done
