@@ -12,7 +12,7 @@ interface UseChatProps {
 export function useChat({ session, onSessionCreated }: UseChatProps) {
   const { messages, addMessage, addAudioMessage, addImageMessage, deleteMessage, refreshMessages } = useMessages(session.id === 'temp' ? null : session.id);
   const [isApiInProgress, setIsApiInProgress] = useState(false);
-  const apiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const apiTimeoutRef = useRef<number | null>(null);
 
   const createNewSession = async () => {
     const { SessionService } = await import('../lib/sessions');

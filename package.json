@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@google/genai": "^1.20.0",
+    "@jlongster/sql.js": "1.6.7",
+    "absurd-sql": "0.0.54",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "sql.js": "^1.13.0"
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
