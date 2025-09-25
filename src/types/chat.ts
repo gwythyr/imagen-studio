@@ -1,5 +1,10 @@
 export type MessageType = 'text' | 'image' | 'image_prompt' | 'audio';
 
+export interface ImageContent {
+  data: Uint8Array;
+  mimeType: string;
+}
+
 export interface Message {
   id: string;
   type: MessageType;
@@ -8,6 +13,7 @@ export interface Message {
   timestamp: number;
   imageData?: Uint8Array;
   audioData?: Uint8Array;
+  imageContent?: ImageContent;
   sentToAi?: boolean;
 }
 

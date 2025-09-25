@@ -1,5 +1,5 @@
 import initSqlJs, { type Database } from 'sql.js';
-import { type Message, type MessageType, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
+import { type Message, type MessageType, type ChatSession, type SessionStats, type ImageRecord, type ImageContent } from '../types/chat';
 
 export class ChatDatabase {
   private db: Database | null = null;
@@ -91,7 +91,13 @@ export class ChatDatabase {
     };
 
     let imageId: string | null = null;
-    if (fullMessage.imageData) {
+    if (fullMessage.imageContent) {
+      imageId = await this.createImage({
+        data: fullMessage.imageContent.data,
+        mimeType: fullMessage.imageContent.mimeType,
+        size: fullMessage.imageContent.data.length
+      });
+    } else if (fullMessage.imageData) {
       imageId = await this.createImage({
         data: fullMessage.imageData,
         mimeType: 'image/jpeg',
@@ -129,7 +135,8 @@ export class ChatDatabase {
     const stmt = this.db!.prepare(`
       SELECT
         m.*,
-        i.data as image_data
+        i.data as image_data,
+        i.mime_type as image_mime_type
       FROM messages m
       LEFT JOIN images i ON m.image_id = i.id
       WHERE m.session_id = ?
@@ -141,6 +148,15 @@ export class ChatDatabase {
 
     while (stmt.step()) {
       const row = stmt.getAsObject();
+
+      let imageContent: ImageContent | undefined;
+      if (row.image_data && row.image_mime_type) {
+        imageContent = {
+          data: new Uint8Array(row.image_data as ArrayBuffer),
+          mimeType: row.image_mime_type as string,
+        };
+      }
+
       messages.push({
         id: row.id as string,
         type: (row.type as MessageType) || 'text',
@@ -149,6 +165,7 @@ export class ChatDatabase {
         timestamp: row.timestamp as number,
         imageData: row.image_data ? new Uint8Array(row.image_data as ArrayBuffer) : undefined,
         audioData: row.audio_data ? new Uint8Array(row.audio_data as ArrayBuffer) : undefined,
+        imageContent,
         sentToAi: Boolean(row.sent_to_ai)
       });
     }
@@ -287,5 +304,15 @@ export class ChatDatabase {
       [sessionId, 'user']
     );
     this.save();
+  }
+
+  async updateSession(sessionId: string, updates: Partial<Pick<ChatSession, 'title'>>): Promise<void> {
+    if (updates.title !== undefined) {
+      this.db!.run(
+        'UPDATE sessions SET title = ?, updated_at = ? WHERE id = ?',
+        [updates.title, Date.now(), sessionId]
+      );
+      this.save();
+    }
   }
 }
