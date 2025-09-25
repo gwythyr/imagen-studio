@@ -22,8 +22,7 @@ export function useChat({ session, onSessionCreated }: UseChatProps) {
     await sessionService.initialize();
     const newSession = await sessionService.createSession();
 
-    const { ChatDatabase } = await import('../lib/database');
-    const db = new ChatDatabase();
+    const { db } = await import('../lib/database');
     await db.initialize();
 
     return { newSession, db };

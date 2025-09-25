@@ -32,8 +32,7 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
     setIsApiInProgress(true);
 
     try {
-      const { ChatDatabase } = await import('../lib/database');
-      const db = new ChatDatabase();
+      const { db } = await import('../lib/database');
       await db.initialize();
 
       const apiKey = await db.getGeminiApiKey();
@@ -52,7 +51,6 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       if (responseData.comment) {
         await addMessage(responseData.comment, 'assistant');
       }
-      await refreshMessages();
 
       if (responseData.imageGenerationPrompt) {
         await db.addMessage(session.id, {

@@ -13,6 +13,7 @@ export class ChatDatabase implements DatabaseMethods {
   }
 
   private initializeWorker(): void {
+    console.log('Initialize Worker');
     try {
       this.worker = new Worker(new URL('./database.worker.ts', import.meta.url), { type: 'module' });
 
@@ -139,3 +140,6 @@ export class ChatDatabase implements DatabaseMethods {
     this.pendingRequests.clear();
   }
 }
+
+// Singleton database instance
+export const db = new ChatDatabase();

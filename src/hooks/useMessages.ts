@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChatDatabase } from '../lib/database';
+import { db } from '../lib/database';
 import { type Message } from '../types/chat';
 
 export function useMessages(sessionId: string | null) {
@@ -15,7 +15,6 @@ export function useMessages(sessionId: string | null) {
 
     const loadMessages = async () => {
       setLoading(true);
-      const db = new ChatDatabase();
       await db.initialize();
       const sessionMessages = await db.getMessages(sessionId);
       setMessages(sessionMessages);
@@ -28,7 +27,6 @@ export function useMessages(sessionId: string | null) {
   const addMessage = useCallback(async (content: string, role: 'user' | 'assistant') => {
     if (!sessionId) return;
 
-    const db = new ChatDatabase();
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
@@ -45,7 +43,6 @@ export function useMessages(sessionId: string | null) {
   const addAudioMessage = useCallback(async (audioData: Uint8Array, role: 'user' | 'assistant' = 'user') => {
     if (!sessionId) return;
 
-    const db = new ChatDatabase();
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
@@ -62,7 +59,6 @@ export function useMessages(sessionId: string | null) {
   const addImageMessage = useCallback(async (imageData: Uint8Array, mimeType?: string, role: 'user' | 'assistant' = 'user') => {
     if (!sessionId) return;
 
-    const db = new ChatDatabase();
     await db.initialize();
 
     const newMessage = await db.addMessage(sessionId, {
@@ -80,7 +76,6 @@ export function useMessages(sessionId: string | null) {
   const deleteMessage = useCallback(async (messageId: string) => {
     if (!sessionId) return;
 
-    const db = new ChatDatabase();
     await db.initialize();
     await db.deleteMessage(messageId);
 
@@ -90,7 +85,6 @@ export function useMessages(sessionId: string | null) {
   const refreshMessages = useCallback(async () => {
     if (!sessionId) return;
 
-    const db = new ChatDatabase();
     await db.initialize();
     const sessionMessages = await db.getMessages(sessionId);
     setMessages(sessionMessages);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChatDatabase } from '../lib/database';
+import { db } from '../lib/database';
 
 export function useSettings() {
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -7,7 +7,6 @@ export function useSettings() {
 
   const loadApiKey = useCallback(async () => {
     setLoading(true);
-    const db = new ChatDatabase();
     await db.initialize();
     const key = await db.getGeminiApiKey();
     setApiKey(key);
@@ -15,7 +14,6 @@ export function useSettings() {
   }, []);
 
   const saveApiKey = useCallback(async (key: string) => {
-    const db = new ChatDatabase();
     await db.initialize();
     await db.setGeminiApiKey(key);
     setApiKey(key);

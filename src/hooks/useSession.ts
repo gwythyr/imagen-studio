@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChatDatabase } from '../lib/database';
+import { db } from '../lib/database';
 import { type ChatSession } from '../types/chat';
 
 export function useSession(sessionId: string | null) {
@@ -15,7 +15,6 @@ export function useSession(sessionId: string | null) {
 
     const loadSession = async () => {
       setLoading(true);
-      const db = new ChatDatabase();
       await db.initialize();
       const sessions = await db.getSessions();
       const foundSession = sessions.find(s => s.id === sessionId);
