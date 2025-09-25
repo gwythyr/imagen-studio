@@ -13,8 +13,8 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
     }}>
       <div style={{
         width: '250px',
-        backgroundColor: '#f8f9fa',
-        borderRight: '1px solid #dee2e6',
+        backgroundColor: 'var(--bg-secondary)',
+        borderRight: '1px solid var(--border-color)',
         display: 'flex',
         flexDirection: 'column',
         padding: '20px 0'
@@ -24,7 +24,7 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
           fontWeight: '600',
           marginBottom: '30px',
           paddingLeft: '20px',
-          color: '#333'
+          color: 'var(--text-primary)'
         }}>
           Imagen Studio
         </div>
@@ -35,8 +35,8 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
             style={{
               padding: '12px 20px',
               border: 'none',
-              backgroundColor: currentView === 'sessions' ? '#e3f2fd' : 'transparent',
-              color: currentView === 'sessions' ? '#1976d2' : '#666',
+              backgroundColor: currentView === 'sessions' ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+              color: currentView === 'sessions' ? '#1976d2' : 'var(--text-secondary)',
               textAlign: 'left',
               cursor: 'pointer',
               fontSize: '14px',
@@ -46,7 +46,7 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
             }}
             onMouseEnter={e => {
               if (currentView !== 'sessions') {
-                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
               }
             }}
             onMouseLeave={e => {
@@ -63,8 +63,8 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
             style={{
               padding: '12px 20px',
               border: 'none',
-              backgroundColor: currentView === 'settings' ? '#e3f2fd' : 'transparent',
-              color: currentView === 'settings' ? '#1976d2' : '#666',
+              backgroundColor: currentView === 'settings' ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+              color: currentView === 'settings' ? '#1976d2' : 'var(--text-secondary)',
               textAlign: 'left',
               cursor: 'pointer',
               fontSize: '14px',
@@ -74,7 +74,7 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
             }}
             onMouseEnter={e => {
               if (currentView !== 'settings') {
-                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
               }
             }}
             onMouseLeave={e => {
@@ -91,7 +91,7 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
       <div style={{
         flex: 1,
         overflow: 'auto',
-        backgroundColor: '#ffffff'
+        backgroundColor: 'var(--bg-primary)'
       }}>
         {children}
       </div>

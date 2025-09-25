@@ -38,7 +38,7 @@ export function Settings() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '200px',
-        color: '#666'
+        color: 'var(--text-secondary)'
       }}>
         Loading...
       </div>
@@ -51,14 +51,14 @@ export function Settings() {
         fontSize: '24px',
         fontWeight: '600',
         marginBottom: '20px',
-        color: '#333'
+        color: 'var(--text-primary)'
       }}>
         Settings
       </h1>
 
       <div style={{
-        backgroundColor: '#ffffff',
-        border: '1px solid #dee2e6',
+        backgroundColor: 'var(--bg-secondary)',
+        border: '1px solid var(--border-color)',
         borderRadius: '8px',
         padding: '24px',
         maxWidth: '600px'
@@ -68,7 +68,7 @@ export function Settings() {
             display: 'block',
             fontSize: '14px',
             fontWeight: '600',
-            color: '#333',
+            color: 'var(--text-primary)',
             marginBottom: '8px'
           }}>
             Gemini API Key
@@ -83,10 +83,10 @@ export function Settings() {
               <div style={{
                 flex: 1,
                 padding: '12px 16px',
-                border: '1px solid #dee2e6',
+                border: '1px solid var(--border-color)',
                 borderRadius: '6px',
-                backgroundColor: '#f8f9fa',
-                color: '#999',
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-muted)',
                 fontSize: '14px'
               }}>
                 No API key set
@@ -121,11 +121,13 @@ export function Settings() {
                 style={{
                   flex: 1,
                   padding: '12px 16px',
-                  border: '1px solid #dee2e6',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '6px',
                   fontSize: '14px',
                   fontFamily: 'monospace',
-                  outline: 'none'
+                  outline: 'none',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
                 autoFocus
               />
@@ -171,12 +173,12 @@ export function Settings() {
               <div style={{
                 flex: 1,
                 padding: '12px 16px',
-                border: '1px solid #dee2e6',
+                border: '1px solid var(--border-color)',
                 borderRadius: '6px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'var(--bg-tertiary)',
                 fontSize: '14px',
                 fontFamily: 'monospace',
-                color: '#333'
+                color: 'var(--text-primary)'
               }}>
                 {maskApiKey(apiKey || '')}
               </div>
@@ -185,8 +187,8 @@ export function Settings() {
                 style={{
                   width: '40px',
                   height: '40px',
-                  backgroundColor: '#f8f9fa',
-                  border: '1px solid #dee2e6',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '6px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -204,7 +206,7 @@ export function Settings() {
 
         <div style={{
           fontSize: '12px',
-          color: '#666',
+          color: 'var(--text-secondary)',
           lineHeight: '1.4'
         }}>
           Your API key is stored locally in your browser and never sent to any third-party servers.

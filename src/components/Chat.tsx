@@ -63,24 +63,24 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
-      backgroundColor: '#ffffff'
+      backgroundColor: 'var(--bg-primary)'
     }}>
       <div style={{
         padding: '60px 20px 20px 20px',
-        borderBottom: '1px solid #dee2e6',
-        backgroundColor: '#f8f9fa'
+        borderBottom: '1px solid var(--border-color)',
+        backgroundColor: 'var(--bg-secondary)'
       }}>
         <h1 style={{
           margin: '0 0 8px 0',
           fontSize: '24px',
           fontWeight: '600',
-          color: session.title ? '#333' : '#999'
+          color: session.title ? 'var(--text-primary)' : 'var(--text-muted)'
         }}>
           {session.title ?? 'Untitled Chat'}
         </h1>
         <div style={{
           fontSize: '14px',
-          color: '#666'
+          color: 'var(--text-secondary)'
         }}>
           Created {formatDate(session.createdAt)}
         </div>
