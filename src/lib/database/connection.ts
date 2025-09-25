@@ -1,9 +1,8 @@
-import initSqlJs, { type Database } from '@jlongster/sql.js';
-import { SQLiteFS } from 'absurd-sql';
-import IndexedDBBackend from 'absurd-sql/dist/indexeddb-backend';
+import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
 export class DatabaseConnection {
-  private db: Database | null = null;
+  private db: any = null;
+  private sqlite3: any = null;
   private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
@@ -15,27 +14,33 @@ export class DatabaseConnection {
 
   private async _doInitialize(): Promise<void> {
     try {
-      const SQL = await initSqlJs({
-        locateFile: (file: string) => {
-          if (file.endsWith('.wasm')) {
-            return `${import.meta.env.BASE_URL}${file}`;
-          }
-          return file;
-        }
+      console.log('Loading and initializing SQLite3 module...');
+
+      this.sqlite3 = await sqlite3InitModule({
+        print: console.log,
+        printErr: console.error,
       });
 
-      const sqlFS = new SQLiteFS(SQL.FS, new IndexedDBBackend());
-      SQL.register_for_idb(sqlFS);
+      console.log('Running SQLite3 version', this.sqlite3.version.libVersion);
 
-      SQL.FS.mkdir('/sql');
-      SQL.FS.mount(sqlFS, {}, '/sql');
+      // Use OPFS if available, otherwise fallback to memory
+      this.db = 'opfs' in this.sqlite3
+        ? new this.sqlite3.oo1.OpfsDb('/imagen-studio.sqlite3')
+        : new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
 
-      const path = '/sql/imagen-studio.sqlite';
-      this.db = new SQL.Database(path, { filename: true });
+      console.log(
+        'opfs' in this.sqlite3
+          ? `OPFS is available, created persisted database at ${this.db.filename}`
+          : `OPFS is not available, created transient database ${this.db.filename}`,
+      );
 
+      // Set pragmas for performance
       this.db.exec(`
-        PRAGMA journal_mode=MEMORY;
-        PRAGMA page_size=8192;
+        PRAGMA journal_mode=WAL;
+        PRAGMA synchronous=NORMAL;
+        PRAGMA cache_size=10000;
+        PRAGMA foreign_keys=ON;
+        PRAGMA temp_store=memory;
       `);
 
       await this.ensureTablesExist();
@@ -46,11 +51,12 @@ export class DatabaseConnection {
   }
 
   private async ensureTablesExist(): Promise<void> {
-    const tableExists = this.db!.exec(`
-      SELECT name FROM sqlite_master WHERE type='table' AND name='sessions';
-    `);
+    const result = this.db.exec({
+      sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='sessions';",
+      returnValue: 'resultRows'
+    });
 
-    if (tableExists.length === 0) {
+    if (result.length === 0) {
       await this.createTables();
     }
   }
@@ -92,25 +98,10 @@ export class DatabaseConnection {
       );
     `;
 
-    let attempts = 0;
-    const maxAttempts = 3;
-
-    while (attempts < maxAttempts) {
-      try {
-        this.db!.exec(sql);
-        break;
-      } catch (error: any) {
-        attempts++;
-        if (error.message?.includes('locked') && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 100 * attempts));
-          continue;
-        }
-        throw error;
-      }
-    }
+    this.db.exec(sql);
   }
 
-  getDb(): Database {
+  getDb(): any {
     if (!this.db) throw new Error('Database not initialized');
     return this.db;
   }

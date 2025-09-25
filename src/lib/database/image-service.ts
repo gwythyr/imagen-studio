@@ -12,9 +12,9 @@ export class ImageService {
     const db = this.conn.getDb();
     const imageId = crypto.randomUUID();
 
-    db.run(
-      'INSERT INTO images (id, data, mime_type, filename, size, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [
+    db.exec({
+      sql: 'INSERT INTO images (id, data, mime_type, filename, size, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      bind: [
         imageId,
         imageData.data,
         imageData.mimeType,
@@ -22,35 +22,39 @@ export class ImageService {
         imageData.size,
         Date.now()
       ]
-    );
+    });
 
     return imageId;
   }
 
   async get(imageId: string): Promise<ImageRecord | null> {
     const db = this.conn.getDb();
-    const stmt = db.prepare('SELECT * FROM images WHERE id = ?');
-    stmt.bind([imageId]);
+    const result = db.exec({
+      sql: 'SELECT * FROM images WHERE id = ?',
+      bind: [imageId],
+      returnValue: 'resultRows'
+    });
 
     let image: ImageRecord | null = null;
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
+    if (result.length > 0) {
+      const row = result[0];
       image = {
-        id: row.id as string,
-        data: new Uint8Array(row.data as ArrayBuffer),
-        mimeType: row.mime_type as string,
-        filename: row.filename as string | null,
-        size: row.size as number,
-        createdAt: row.created_at as number
+        id: row[0] as string,
+        data: new Uint8Array(row[1] as ArrayBuffer),
+        mimeType: row[2] as string,
+        filename: row[3] as string | null,
+        size: row[4] as number,
+        createdAt: row[5] as number
       };
     }
-
-    stmt.free();
     return image;
   }
 
   async delete(imageId: string): Promise<void> {
     const db = this.conn.getDb();
-    db.run('DELETE FROM images WHERE id = ?', [imageId]);
+    db.exec({
+      sql: 'DELETE FROM images WHERE id = ?',
+      bind: [imageId]
+    });
   }
 }

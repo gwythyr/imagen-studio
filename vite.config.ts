@@ -21,6 +21,6 @@ export default defineConfig({
     format: 'es',
   },
   optimizeDeps: {
-    exclude: ['absurd-sql'],
+    exclude: ['@sqlite.org/sqlite-wasm'],
   },
 })

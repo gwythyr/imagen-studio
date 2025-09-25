@@ -9,25 +9,22 @@ export class SettingsService {
 
   async get(key: string): Promise<string | null> {
     const db = this.conn.getDb();
-    const stmt = db.prepare('SELECT value FROM settings WHERE key = ?');
-    stmt.bind([key]);
+    const result = db.exec({
+      sql: 'SELECT value FROM settings WHERE key = ?',
+      bind: [key],
+      returnValue: 'resultRows'
+    });
 
-    let value: string | null = null;
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
-      value = row.value as string;
-    }
-
-    stmt.free();
+    const value: string | null = result.length > 0 ? result[0][0] as string : null;
     return value;
   }
 
   async set(key: string, value: string): Promise<void> {
     const db = this.conn.getDb();
-    db.run(
-      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
-      [key, value]
-    );
+    db.exec({
+      sql: 'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+      bind: [key, value]
+    });
   }
 
   async getGeminiApiKey(): Promise<string | null> {

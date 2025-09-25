@@ -1,4 +1,4 @@
-import { initBackend } from 'absurd-sql/dist/indexeddb-main-thread';
+// Legacy import removed - now using @sqlite.org/sqlite-wasm
 import { type Message, type ChatSession, type SessionStats, type ImageRecord } from '../types/chat';
 import { type DatabaseWorkerRequest, type DatabaseWorkerResponse, type DatabaseMethods } from './database-types';
 
@@ -17,8 +17,7 @@ export class ChatDatabase implements DatabaseMethods {
     try {
       this.worker = new Worker(new URL('./database.worker.ts', import.meta.url), { type: 'module' });
 
-      // Install backend for Safari compatibility (nested workers)
-      initBackend(this.worker);
+      // SQLite WASM worker - no additional backend needed
 
       this.worker.onmessage = (event: MessageEvent<DatabaseWorkerResponse>) => {
         const { id, result, error } = event.data;

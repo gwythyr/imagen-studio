@@ -17,64 +17,57 @@ export class SessionService {
       updatedAt: Date.now()
     };
 
-    db.run(
-      'INSERT INTO sessions (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)',
-      [session.id, session.title, session.createdAt, session.updatedAt]
-    );
+    db.exec({
+      sql: 'INSERT INTO sessions (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)',
+      bind: [session.id, session.title, session.createdAt, session.updatedAt]
+    });
 
     return session;
   }
 
   async getAll(): Promise<ChatSession[]> {
     const db = this.conn.getDb();
-    const stmt = db.prepare('SELECT * FROM sessions ORDER BY updated_at DESC');
-    const sessions: ChatSession[] = [];
+    const result = db.exec({
+      sql: 'SELECT * FROM sessions ORDER BY updated_at DESC',
+      returnValue: 'resultRows',
+      columnNames: true
+    });
 
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      sessions.push({
-        id: row.id as string,
-        title: row.title as string,
-        createdAt: row.created_at as number,
-        updatedAt: row.updated_at as number
-      });
-    }
-
-    stmt.free();
+    const sessions: ChatSession[] = result.map((row: any[]) => ({
+      id: row[0] as string,
+      title: row[1] as string,
+      createdAt: row[2] as number,
+      updatedAt: row[3] as number
+    }));
     return sessions;
   }
 
   async update(sessionId: string, updates: Partial<Pick<ChatSession, 'title'>>): Promise<void> {
     if (updates.title !== undefined) {
       const db = this.conn.getDb();
-      db.run(
-        'UPDATE sessions SET title = ?, updated_at = ? WHERE id = ?',
-        [updates.title, Date.now(), sessionId]
-      );
+      db.exec({
+        sql: 'UPDATE sessions SET title = ?, updated_at = ? WHERE id = ?',
+        bind: [updates.title, Date.now(), sessionId]
+      });
     }
   }
 
   async getStats(sessionId: string): Promise<SessionStats> {
     const db = this.conn.getDb();
-    const stmt = db.prepare(`
-      SELECT
-        COUNT(*) as message_count,
-        MAX(timestamp) as last_message_timestamp
-      FROM messages
-      WHERE session_id = ?
-    `);
-    stmt.bind([sessionId]);
+    const result = db.exec({
+      sql: `
+        SELECT
+          COUNT(*) as message_count,
+          MAX(timestamp) as last_message_timestamp
+        FROM messages
+        WHERE session_id = ?
+      `,
+      bind: [sessionId],
+      returnValue: 'resultRows'
+    });
 
-    let messageCount = 0;
-    let lastMessageTimestamp = null;
-
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
-      messageCount = row.message_count as number;
-      lastMessageTimestamp = row.last_message_timestamp as number | null;
-    }
-
-    stmt.free();
+    const messageCount = result[0]?.[0] as number || 0;
+    const lastMessageTimestamp = result[0]?.[1] as number | null;
     return {
       sessionId,
       messageCount,

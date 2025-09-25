@@ -37,9 +37,9 @@ export class MessageService {
     const sanitizedContent = fullMessage.content ?
       fullMessage.content.replace(/\0/g, '').replace(/[\uFFFE\uFFFF]/g, '') : null;
 
-    db.run(
-      'INSERT INTO messages (id, session_id, type, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [
+    db.exec({
+      sql: 'INSERT INTO messages (id, session_id, type, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      bind: [
         fullMessage.id,
         sessionId,
         fullMessage.type,
@@ -50,70 +50,71 @@ export class MessageService {
         fullMessage.audioData || null,
         sentToAi
       ]
-    );
+    });
 
-    db.run(
-      'UPDATE sessions SET updated_at = ? WHERE id = ?',
-      [Date.now(), sessionId]
-    );
+    db.exec({
+      sql: 'UPDATE sessions SET updated_at = ? WHERE id = ?',
+      bind: [Date.now(), sessionId]
+    });
 
     return fullMessage;
   }
 
   async getAll(sessionId: string): Promise<Message[]> {
     const db = this.conn.getDb();
-    const stmt = db.prepare(`
-      SELECT
-        m.*,
-        i.data as image_data,
-        i.mime_type as image_mime_type
-      FROM messages m
-      LEFT JOIN images i ON m.image_id = i.id
-      WHERE m.session_id = ?
-      ORDER BY m.timestamp ASC
-    `);
-    stmt.bind([sessionId]);
+    const result = db.exec({
+      sql: `
+        SELECT
+          m.*,
+          i.data as image_data,
+          i.mime_type as image_mime_type
+        FROM messages m
+        LEFT JOIN images i ON m.image_id = i.id
+        WHERE m.session_id = ?
+        ORDER BY m.timestamp ASC
+      `,
+      bind: [sessionId],
+      returnValue: 'resultRows',
+      columnNames: true
+    });
 
-    const messages: Message[] = [];
-
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-
+    const messages: Message[] = result.map((row: any[]) => {
       let imageContent: ImageContent | undefined;
-      if (row.image_data && row.image_mime_type) {
+      if (row[9] && row[10]) { // image_data and image_mime_type columns
         imageContent = {
-          data: new Uint8Array(row.image_data as ArrayBuffer),
-          mimeType: row.image_mime_type as string,
+          data: new Uint8Array(row[9] as ArrayBuffer),
+          mimeType: row[10] as string,
         };
       }
 
-      messages.push({
-        id: row.id as string,
-        type: (row.type as MessageType) || 'text',
-        content: row.content as string,
-        role: row.role as 'user' | 'assistant',
-        timestamp: row.timestamp as number,
-        imageData: row.image_data ? new Uint8Array(row.image_data as ArrayBuffer) : undefined,
-        audioData: row.audio_data ? new Uint8Array(row.audio_data as ArrayBuffer) : undefined,
+      return {
+        id: row[0] as string,
+        type: (row[2] as MessageType) || 'text',
+        content: row[3] as string,
+        role: row[4] as 'user' | 'assistant',
+        timestamp: row[5] as number,
+        imageData: row[9] ? new Uint8Array(row[9] as ArrayBuffer) : undefined,
+        audioData: row[7] ? new Uint8Array(row[7] as ArrayBuffer) : undefined,
         imageContent,
-        sentToAi: Boolean(row.sent_to_ai)
-      });
-    }
-
-    stmt.free();
+        sentToAi: Boolean(row[8])
+      };
+    });
     return messages;
   }
 
   async delete(messageId: string): Promise<void> {
     const db = this.conn.getDb();
-    db.run('DELETE FROM messages WHERE id = ?', [messageId]);
+    db.exec({
+      sql: 'DELETE FROM messages WHERE id = ?',
+      bind: [messageId]
+    });
   }
 
   async markSessionAsSent(sessionId: string): Promise<void> {
     const db = this.conn.getDb();
-    db.run(
-      'UPDATE messages SET sent_to_ai = 1 WHERE session_id = ? AND role = ?',
-      [sessionId, 'user']
-    );
+    db.exec({
+      sql: 'UPDATE messages SET sent_to_ai = 1 WHERE session_id = ? AND role = ?',
+      bind: [sessionId, 'user']
+    });
   }
 }
