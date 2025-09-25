@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import { type ChatSession, type Message } from '../types/chat';
 import { GeminiMessageProcessor } from '../lib/geminiMessageProcessor';
+import { AI_INTERACTION_SYSTEM_PROMPT } from '../prompts/aiInteractionPrompt';
 
 interface UseAiInteractionProps {
   session: ChatSession;
@@ -49,6 +50,9 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       });
 
       const config = {
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -65,6 +69,11 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
             },
           },
         },
+        systemInstruction: [
+          {
+            text: AI_INTERACTION_SYSTEM_PROMPT,
+          }
+        ],
       };
 
       const model = 'gemini-2.5-flash';
