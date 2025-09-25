@@ -15,7 +15,7 @@ interface LlmServiceConfig {
 }
 
 export class LlmService {
-  private static readonly DEFAULT_MODEL = 'gemini-2.5-flash';
+  private static readonly DEFAULT_MODEL = 'gemini-2.5-pro';
   private static readonly DEFAULT_THINKING_BUDGET = 0;
 
   static async generateResponse(
@@ -72,7 +72,7 @@ export class LlmService {
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateImages({
-      model: 'models/imagen-4.0-fast-generate-001',
+      model: 'models/imagen-4.0-generate-001',
       prompt,
       config: {
         numberOfImages: 1,
