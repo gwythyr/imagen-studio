@@ -11,7 +11,36 @@ interface UseAiInteractionProps {
 
 export function useAiInteraction({ session, messages, addMessage, refreshMessages }: UseAiInteractionProps) {
   const [isApiInProgress, setIsApiInProgress] = useState(false);
+  const [isImageGenerating, setIsImageGenerating] = useState(false);
   const apiTimeoutRef = useRef<number | null>(null);
+
+  const generateImageFromPrompt = async (prompt: string) => {
+    if (session.id === 'temp') return;
+
+    setIsImageGenerating(true);
+    try {
+      const { db } = await import('../lib/database');
+      await db.initialize();
+
+      const apiKey = await db.getGeminiApiKey();
+      if (!apiKey) return;
+
+      const imageData = await LlmService.generateImage(apiKey, prompt);
+
+      if (imageData) {
+        await db.addMessage(session.id, {
+          type: 'image' as const,
+          role: 'assistant' as const,
+          timestamp: Date.now(),
+          imageData,
+        });
+
+        await refreshMessages();
+      }
+    } finally {
+      setIsImageGenerating(false);
+    }
+  };
 
   const handleAiClick = async () => {
     console.log(`AI button clicked. isApiInProgress: ${isApiInProgress}`);
@@ -65,18 +94,7 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       await refreshMessages();
 
       if (responseData.imageGenerationPrompt) {
-        const imageData = await LlmService.generateImage(apiKey, responseData.imageGenerationPrompt);
-
-        if (imageData) {
-          await db.addMessage(session.id, {
-            type: 'image' as const,
-            role: 'assistant' as const,
-            timestamp: Date.now(),
-            imageData,
-          });
-
-          await refreshMessages();
-        }
+        await generateImageFromPrompt(responseData.imageGenerationPrompt);
       }
     } finally {
       setIsApiInProgress(false);
@@ -93,6 +111,8 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
 
   return {
     handleAiClick,
-    isApiInProgress
+    isApiInProgress,
+    generateImageFromPrompt,
+    isImageGenerating
   };
 }

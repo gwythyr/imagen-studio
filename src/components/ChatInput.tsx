@@ -7,6 +7,7 @@ interface ChatInputProps {
   onSubmitImage: (imageData: Uint8Array, mimeType: string) => void;
   onAiClick: () => void;
   isApiInProgress: boolean;
+  isImageGenerating?: boolean;
   disabled: boolean;
 }
 
@@ -16,11 +17,14 @@ export function ChatInput({
   onSubmitImage,
   onAiClick,
   isApiInProgress,
+  isImageGenerating,
   disabled
 }: ChatInputProps) {
   const [inputValue, setInputValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isRecording, audioData, startRecording, stopRecording, clearRecording } = useAudioRecording();
+
+  const isAnyOperationInProgress = isApiInProgress || isImageGenerating;
 
   const handleSubmit = async () => {
     const content = inputValue.trim();
@@ -84,7 +88,7 @@ export function ChatInput({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={isApiInProgress}
+          disabled={isAnyOperationInProgress}
           style={{
             flex: 1,
             padding: '12px 16px',
@@ -94,11 +98,11 @@ export function ChatInput({
             outline: 'none',
             resize: 'none',
             fontFamily: 'inherit',
-            opacity: isApiInProgress ? '0.5' : '1',
-            cursor: isApiInProgress ? 'not-allowed' : 'text'
+            opacity: isAnyOperationInProgress ? '0.5' : '1',
+            cursor: isAnyOperationInProgress ? 'not-allowed' : 'text'
           }}
           onFocus={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.target.style.borderColor = '#1976d2';
             }
           }}
@@ -109,43 +113,43 @@ export function ChatInput({
 
         <button
           onClick={handleSubmit}
-          disabled={!inputValue.trim() || isApiInProgress}
+          disabled={!inputValue.trim() || isAnyOperationInProgress}
           style={{
             width: '44px',
             height: '44px',
             borderRadius: '12px',
             border: 'none',
-            backgroundColor: (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb',
-            color: (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: (!inputValue.trim() || isApiInProgress) ? 'not-allowed' : 'pointer',
+            backgroundColor: (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb',
+            color: (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.4)' : '#ffffff',
+            cursor: (!inputValue.trim() || isAnyOperationInProgress) ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '20px',
             fontWeight: '500',
             transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: (!inputValue.trim() || isApiInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)',
+            boxShadow: (!inputValue.trim() || isAnyOperationInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)',
             transform: 'scale(1)',
           }}
           onMouseEnter={e => {
-            if (inputValue.trim() && !isApiInProgress) {
+            if (inputValue.trim() && !isAnyOperationInProgress) {
               e.currentTarget.style.backgroundColor = '#1d4ed8';
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,99,235,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb';
+            e.currentTarget.style.backgroundColor = (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb';
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = (!inputValue.trim() || isApiInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)';
+            e.currentTarget.style.boxShadow = (!inputValue.trim() || isAnyOperationInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)';
           }}
           onMouseDown={e => {
-            if (inputValue.trim() && !isApiInProgress) {
+            if (inputValue.trim() && !isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(0.95)';
             }
           }}
           onMouseUp={e => {
-            if (inputValue.trim() && !isApiInProgress) {
+            if (inputValue.trim() && !isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(1.05)';
             }
           }}
@@ -155,43 +159,43 @@ export function ChatInput({
 
         <button
           onClick={handleRecordClick}
-          disabled={isApiInProgress}
+          disabled={isAnyOperationInProgress}
           style={{
             width: '44px',
             height: '44px',
             borderRadius: '12px',
             border: 'none',
-            backgroundColor: isApiInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b',
-            color: isApiInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: isApiInProgress ? 'not-allowed' : 'pointer',
+            backgroundColor: isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b',
+            color: isAnyOperationInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
+            cursor: isAnyOperationInProgress ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '18px',
             fontWeight: '500',
             transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: isApiInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)',
+            boxShadow: isAnyOperationInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)',
             transform: 'scale(1)',
           }}
           onMouseEnter={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.backgroundColor = isRecording ? '#dc2626' : '#475569';
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = isRecording ? '0 4px 12px rgba(239,68,68,0.4)' : '0 4px 12px rgba(100,116,139,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isApiInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b';
+            e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b';
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = isApiInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)';
+            e.currentTarget.style.boxShadow = isAnyOperationInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)';
           }}
           onMouseDown={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(0.95)';
             }
           }}
           onMouseUp={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(1.05)';
             }
           }}
@@ -205,48 +209,48 @@ export function ChatInput({
           onChange={handleImageSelect}
           style={{ display: 'none' }}
           ref={fileInputRef}
-          disabled={isApiInProgress}
+          disabled={isAnyOperationInProgress}
         />
 
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={isApiInProgress}
+          disabled={isAnyOperationInProgress}
           style={{
             width: '44px',
             height: '44px',
             borderRadius: '12px',
             border: 'none',
-            backgroundColor: isApiInProgress ? 'rgba(0,0,0,0.1)' : '#10b981',
-            color: isApiInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: isApiInProgress ? 'not-allowed' : 'pointer',
+            backgroundColor: isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : '#10b981',
+            color: isAnyOperationInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
+            cursor: isAnyOperationInProgress ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '18px',
             fontWeight: '500',
             transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: isApiInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)',
+            boxShadow: isAnyOperationInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)',
             transform: 'scale(1)',
           }}
           onMouseEnter={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.backgroundColor = '#059669';
               e.currentTarget.style.transform = 'scale(1.05)';
               e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isApiInProgress ? 'rgba(0,0,0,0.1)' : '#10b981';
+            e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : '#10b981';
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = isApiInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)';
+            e.currentTarget.style.boxShadow = isAnyOperationInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)';
           }}
           onMouseDown={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(0.95)';
             }
           }}
           onMouseUp={e => {
-            if (!isApiInProgress) {
+            if (!isAnyOperationInProgress) {
               e.currentTarget.style.transform = 'scale(1.05)';
             }
           }}
@@ -262,7 +266,7 @@ export function ChatInput({
             height: '44px',
             borderRadius: '12px',
             border: 'none',
-            backgroundColor: disabled ? 'rgba(0,0,0,0.1)' : isApiInProgress ? '#f59e0b' : '#6366f1',
+            backgroundColor: disabled ? 'rgba(0,0,0,0.1)' : isAnyOperationInProgress ? '#f59e0b' : '#6366f1',
             color: disabled ? 'rgba(0,0,0,0.4)' : '#ffffff',
             cursor: disabled ? 'not-allowed' : 'pointer',
             display: 'flex',
@@ -271,20 +275,20 @@ export function ChatInput({
             fontSize: '18px',
             fontWeight: '500',
             transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: disabled ? 'none' : isApiInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)',
+            boxShadow: disabled ? 'none' : isAnyOperationInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)',
             transform: 'scale(1)',
           }}
           onMouseEnter={e => {
             if (!disabled) {
-              e.currentTarget.style.backgroundColor = isApiInProgress ? '#d97706' : '#4f46e5';
+              e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? '#d97706' : '#4f46e5';
               e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = isApiInProgress ? '0 4px 12px rgba(245,158,11,0.4)' : '0 4px 12px rgba(99,102,241,0.4)';
+              e.currentTarget.style.boxShadow = isAnyOperationInProgress ? '0 4px 12px rgba(245,158,11,0.4)' : '0 4px 12px rgba(99,102,241,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = disabled ? 'rgba(0,0,0,0.1)' : isApiInProgress ? '#f59e0b' : '#6366f1';
+            e.currentTarget.style.backgroundColor = disabled ? 'rgba(0,0,0,0.1)' : isAnyOperationInProgress ? '#f59e0b' : '#6366f1';
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = disabled ? 'none' : isApiInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)';
+            e.currentTarget.style.boxShadow = disabled ? 'none' : isAnyOperationInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)';
           }}
           onMouseDown={e => {
             if (!disabled) {
@@ -297,7 +301,7 @@ export function ChatInput({
             }
           }}
         >
-          {isApiInProgress ? '◆' : '✨'}
+          {isAnyOperationInProgress ? '◆' : '✨'}
         </button>
       </div>
     </div>

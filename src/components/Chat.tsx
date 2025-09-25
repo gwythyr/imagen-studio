@@ -12,7 +12,7 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, deleteMessage, handleMessage, handleAiClick, isApiInProgress } = useChat({ session, onSessionCreated });
+  const { messages, deleteMessage, handleMessage, handleAiClick, isApiInProgress, generateImageFromPrompt, isImageGenerating } = useChat({ session, onSessionCreated });
   const [imageModal, setImageModal] = useState<{ data: Uint8Array; messageId: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +100,8 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
             message={message}
             onDeleteMessage={deleteMessage}
             onImageClick={handleImageClick}
+            onGenerateImage={generateImageFromPrompt}
+            isImageGenerating={isImageGenerating}
           />
         ))}
         <div ref={messagesEndRef} />
@@ -111,6 +113,7 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
         onSubmitImage={handleSubmitImage}
         onAiClick={handleAiClick}
         isApiInProgress={isApiInProgress}
+        isImageGenerating={isImageGenerating}
         disabled={session.id === 'temp'}
       />
 

@@ -9,7 +9,7 @@ interface UseChatProps {
 
 export function useChat({ session, onSessionCreated }: UseChatProps) {
   const { messages, addMessage, addAudioMessage, addImageMessage, deleteMessage, refreshMessages } = useMessages(session.id === 'temp' ? null : session.id);
-  const { handleAiClick, isApiInProgress } = useAiInteraction({
+  const { handleAiClick, isApiInProgress, generateImageFromPrompt, isImageGenerating } = useAiInteraction({
     session,
     messages,
     addMessage,
@@ -60,6 +60,8 @@ export function useChat({ session, onSessionCreated }: UseChatProps) {
     deleteMessage,
     handleMessage,
     handleAiClick,
-    isApiInProgress
+    isApiInProgress,
+    generateImageFromPrompt,
+    isImageGenerating
   };
 }
