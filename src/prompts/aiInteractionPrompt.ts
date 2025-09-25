@@ -29,6 +29,7 @@ QUALITY STANDARDS:
 • Include technical photography/art terminology
 • Avoid contradictory descriptions
 • Create nuanced, multi-dimensional imagery
+• Keep prompts concise - avoid unnecessary verbosity
 • Always output in English regardless of input language
 
 UKRAINIAN COMMENT REQUIREMENTS:
