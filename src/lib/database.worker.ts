@@ -26,7 +26,7 @@ class DatabaseWorker {
       const SQL = await initSqlJs({
         locateFile: (file: string) => {
           if (file.endsWith('.wasm')) {
-            return `/${file}`;
+            return `${import.meta.env.BASE_URL}${file}`;
           }
           return file;
         }
