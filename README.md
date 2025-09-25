@@ -1,4 +1,4 @@
-# Imagen Studio
+# [Imagen Studio](https://gwythyr.github.io/imagen-studio/)
 
 A powerful AI-powered asset generation studio that runs entirely in your browser. Create images, get help with creative projects, and generate content using voice commands - all while keeping your data completely private.
 
@@ -31,7 +31,7 @@ A powerful AI-powered asset generation studio that runs entirely in your browser
    - Click "Create API Key" (Google account required)
    - Copy the generated key
 
-2. **Configure Imagen Studio**
+2. **Configure [Imagen Studio](https://gwythyr.github.io/imagen-studio/)**
    - Open the application
    - Click the ⚙️ settings icon in the top-right corner
    - Paste your API key in the "Google AI API Key" field
