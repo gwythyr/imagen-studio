@@ -3,12 +3,12 @@ import { type Message, type ChatSession, type SessionStats, type ImageRecord } f
 export interface DatabaseWorkerRequest {
   id: string;
   method: string;
-  params: any[];
+  params: unknown[];
 }
 
 export interface DatabaseWorkerResponse {
   id: string;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 

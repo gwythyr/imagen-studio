@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, PersonGeneration } from '@google/genai';
 import { type ChatSession, type Message } from '../types/chat';
-import { GeminiMessageProcessor } from '../lib/geminiMessageProcessor';
-import { AI_INTERACTION_SYSTEM_PROMPT } from '../prompts/aiInteractionPrompt';
+import { LlmService } from '../services/llmService';
 
 interface UseAiInteractionProps {
   session: ChatSession;
@@ -45,53 +44,7 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
         return;
       }
 
-      const ai = new GoogleGenAI({
-        apiKey: apiKey,
-      });
-
-      const config = {
-        thinkingConfig: {
-          thinkingBudget: 0,
-        },
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          required: ["chatTitle", "imageGenerationPrompt"],
-          properties: {
-            chatTitle: {
-              type: Type.STRING,
-            },
-            imageGenerationPrompt: {
-              type: Type.STRING,
-            },
-            comment: {
-              type: Type.STRING,
-            },
-          },
-        },
-        systemInstruction: [
-          {
-            text: AI_INTERACTION_SYSTEM_PROMPT,
-          }
-        ],
-      };
-
-      const model = 'gemini-2.5-flash';
-
-      const contents = GeminiMessageProcessor.processMessages(messages);
-
-      const response = await ai.models.generateContent({
-        model,
-        config,
-        contents,
-      });
-
-      if (!response.text) {
-        setIsApiInProgress(false);
-        return;
-      }
-
-      const responseData = JSON.parse(response.text);
+      const responseData = await LlmService.generateResponse(apiKey, messages);
 
       if (responseData.chatTitle) {
         await db.updateSession(session.id, { title: responseData.chatTitle });
