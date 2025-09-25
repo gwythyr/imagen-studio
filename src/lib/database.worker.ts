@@ -169,13 +169,17 @@ class DatabaseWorker {
 
     const sentToAi = fullMessage.role === 'user' ? (fullMessage.sentToAi ? 1 : 0) : 1;
 
+    // Sanitize content to prevent database corruption from null bytes and invalid Unicode
+    const sanitizedContent = fullMessage.content ?
+      fullMessage.content.replace(/\0/g, '').replace(/[\uFFFE\uFFFF]/g, '') : null;
+
     this.db!.run(
       'INSERT INTO messages (id, session_id, type, content, role, timestamp, image_id, audio_data, sent_to_ai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         fullMessage.id,
         sessionId,
         fullMessage.type,
-        fullMessage.content || null,
+        sanitizedContent,
         fullMessage.role,
         fullMessage.timestamp,
         imageId,
