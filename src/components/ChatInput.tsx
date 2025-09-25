@@ -4,7 +4,7 @@ import { useAudioRecording } from '../hooks/useAudioRecording';
 interface ChatInputProps {
   onSubmitText: (content: string) => void;
   onSubmitAudio: (audioData: Uint8Array) => void;
-  onSubmitImage: (imageData: Uint8Array) => void;
+  onSubmitImage: (imageData: Uint8Array, mimeType: string) => void;
   onAiClick: () => void;
   isApiInProgress: boolean;
   disabled: boolean;
@@ -53,7 +53,7 @@ export function ChatInput({
     const arrayBuffer = await file.arrayBuffer();
     const imageData = new Uint8Array(arrayBuffer);
 
-    onSubmitImage(imageData);
+    onSubmitImage(imageData, file.type);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';

@@ -36,8 +36,8 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
     handleMessage({ audioData });
   };
 
-  const handleSubmitImage = (imageData: Uint8Array) => {
-    handleMessage({ imageData });
+  const handleSubmitImage = (imageData: Uint8Array, mimeType: string) => {
+    handleMessage({ imageData, mimeType });
   };
 
   useEffect(() => {

@@ -27,7 +27,7 @@ export function useChat({ session, onSessionCreated }: UseChatProps) {
     return { newSession, db };
   };
 
-  const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array; imageData?: Uint8Array }) => {
+  const handleMessage = async (messageData: { content?: string; audioData?: Uint8Array; imageData?: Uint8Array; mimeType?: string }) => {
     if (session.id === 'temp') {
       const { newSession, db } = await createNewSession();
       const type: MessageType = messageData.imageData ? 'image' : messageData.audioData ? 'audio' : 'text';
@@ -48,7 +48,7 @@ export function useChat({ session, onSessionCreated }: UseChatProps) {
       } else if (messageData.audioData) {
         await addAudioMessage(messageData.audioData);
       } else if (messageData.imageData) {
-        await addImageMessage(messageData.imageData);
+        await addImageMessage(messageData.imageData, messageData.mimeType);
       }
     }
   };

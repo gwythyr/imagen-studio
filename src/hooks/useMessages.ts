@@ -59,7 +59,7 @@ export function useMessages(sessionId: string | null) {
     setMessages(prev => [...prev, newMessage]);
   }, [sessionId]);
 
-  const addImageMessage = useCallback(async (imageData: Uint8Array, role: 'user' | 'assistant' = 'user') => {
+  const addImageMessage = useCallback(async (imageData: Uint8Array, mimeType?: string, role: 'user' | 'assistant' = 'user') => {
     if (!sessionId) return;
 
     const db = new ChatDatabase();
@@ -69,7 +69,8 @@ export function useMessages(sessionId: string | null) {
       type: 'image' as const,
       role,
       timestamp: Date.now(),
-      imageData,
+      imageContent: mimeType ? { data: imageData, mimeType } : undefined,
+      imageData: !mimeType ? imageData : undefined,
       sentToAi: role === 'user' ? false : undefined
     });
 
