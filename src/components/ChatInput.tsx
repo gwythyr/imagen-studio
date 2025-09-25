@@ -111,62 +111,92 @@ export function ChatInput({
           onClick={handleSubmit}
           disabled={!inputValue.trim() || isApiInProgress}
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '24px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
             border: 'none',
-            backgroundColor: (!inputValue.trim() || isApiInProgress) ? '#ccc' : '#1976d2',
-            color: '#ffffff',
+            backgroundColor: (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb',
+            color: (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.4)' : '#ffffff',
             cursor: (!inputValue.trim() || isApiInProgress) ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '16px',
-            fontWeight: '600',
-            transition: 'background-color 0.2s ease',
-            opacity: isApiInProgress ? '0.5' : '1'
+            fontSize: '18px',
+            fontWeight: '500',
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            boxShadow: (!inputValue.trim() || isApiInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)',
+            transform: 'scale(1)',
           }}
           onMouseEnter={e => {
             if (inputValue.trim() && !isApiInProgress) {
-              e.currentTarget.style.backgroundColor = '#1565c0';
+              e.currentTarget.style.backgroundColor = '#1d4ed8';
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,99,235,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = (!inputValue.trim() || isApiInProgress) ? '#ccc' : '#1976d2';
+            e.currentTarget.style.backgroundColor = (!inputValue.trim() || isApiInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = (!inputValue.trim() || isApiInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)';
+          }}
+          onMouseDown={e => {
+            if (inputValue.trim() && !isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }
+          }}
+          onMouseUp={e => {
+            if (inputValue.trim() && !isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }
           }}
         >
-          ➤
+          →
         </button>
 
         <button
           onClick={handleRecordClick}
           disabled={isApiInProgress}
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '24px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
             border: 'none',
-            backgroundColor: isRecording ? '#dc3545' : '#6c757d',
-            color: '#ffffff',
+            backgroundColor: isApiInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b',
+            color: isApiInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
             cursor: isApiInProgress ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            fontWeight: '600',
-            transition: 'background-color 0.2s ease',
-            opacity: isApiInProgress ? '0.5' : '1'
+            fontWeight: '500',
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            boxShadow: isApiInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)',
+            transform: 'scale(1)',
           }}
           onMouseEnter={e => {
             if (!isApiInProgress) {
-              e.currentTarget.style.backgroundColor = isRecording ? '#c82333' : '#5a6268';
+              e.currentTarget.style.backgroundColor = isRecording ? '#dc2626' : '#475569';
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = isRecording ? '0 4px 12px rgba(239,68,68,0.4)' : '0 4px 12px rgba(100,116,139,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isRecording ? '#dc3545' : '#6c757d';
+            e.currentTarget.style.backgroundColor = isApiInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = isApiInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)';
+          }}
+          onMouseDown={e => {
+            if (!isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }
+          }}
+          onMouseUp={e => {
+            if (!isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }
           }}
         >
-          🎤
+          ●
         </button>
 
         <input
@@ -182,62 +212,92 @@ export function ChatInput({
           onClick={() => fileInputRef.current?.click()}
           disabled={isApiInProgress}
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '24px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
             border: 'none',
-            backgroundColor: '#28a745',
-            color: '#ffffff',
+            backgroundColor: isApiInProgress ? 'rgba(0,0,0,0.1)' : '#10b981',
+            color: isApiInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
             cursor: isApiInProgress ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            fontWeight: '600',
-            transition: 'background-color 0.2s ease',
-            opacity: isApiInProgress ? '0.5' : '1'
+            fontWeight: '500',
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            boxShadow: isApiInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)',
+            transform: 'scale(1)',
           }}
           onMouseEnter={e => {
             if (!isApiInProgress) {
-              e.currentTarget.style.backgroundColor = '#218838';
+              e.currentTarget.style.backgroundColor = '#059669';
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = '#28a745';
+            e.currentTarget.style.backgroundColor = isApiInProgress ? 'rgba(0,0,0,0.1)' : '#10b981';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = isApiInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)';
+          }}
+          onMouseDown={e => {
+            if (!isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }
+          }}
+          onMouseUp={e => {
+            if (!isApiInProgress) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }
           }}
         >
-          🖼️
+          +
         </button>
 
         <button
           onClick={onAiClick}
           disabled={disabled}
           style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '24px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
             border: 'none',
-            backgroundColor: isApiInProgress ? '#dc3545' : '#007bff',
-            color: '#ffffff',
+            backgroundColor: disabled ? 'rgba(0,0,0,0.1)' : isApiInProgress ? '#f59e0b' : '#6366f1',
+            color: disabled ? 'rgba(0,0,0,0.4)' : '#ffffff',
             cursor: disabled ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            fontWeight: '600',
-            transition: 'background-color 0.2s ease',
-            opacity: disabled ? '0.5' : '1'
+            fontWeight: '500',
+            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+            boxShadow: disabled ? 'none' : isApiInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)',
+            transform: 'scale(1)',
           }}
           onMouseEnter={e => {
             if (!disabled) {
-              e.currentTarget.style.backgroundColor = isApiInProgress ? '#c82333' : '#0056b3';
+              e.currentTarget.style.backgroundColor = isApiInProgress ? '#d97706' : '#4f46e5';
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = isApiInProgress ? '0 4px 12px rgba(245,158,11,0.4)' : '0 4px 12px rgba(99,102,241,0.4)';
             }
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isApiInProgress ? '#dc3545' : '#007bff';
+            e.currentTarget.style.backgroundColor = disabled ? 'rgba(0,0,0,0.1)' : isApiInProgress ? '#f59e0b' : '#6366f1';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = disabled ? 'none' : isApiInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)';
+          }}
+          onMouseDown={e => {
+            if (!disabled) {
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }
+          }}
+          onMouseUp={e => {
+            if (!disabled) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }
           }}
         >
-          {isApiInProgress ? '⏸️' : '🤖'}
+          {isApiInProgress ? '◆' : '✨'}
         </button>
       </div>
     </div>
