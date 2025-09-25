@@ -59,11 +59,17 @@ export function MessageBubble({ message, onDeleteMessage, onImageClick }: Messag
           if (deleteBtn) deleteBtn.style.opacity = '0';
         }}
         >
-          {message.imageData && (
+          {(message.imageData || message.imageContent) && (
             <img
-              src={URL.createObjectURL(new Blob([message.imageData]))}
+              src={URL.createObjectURL(new Blob(
+                [message.imageContent?.data || message.imageData!],
+                { type: message.imageContent?.mimeType || 'image/jpeg' }
+              ))}
               alt="Uploaded image"
-              onClick={() => onImageClick(message.imageData!, message.id)}
+              onClick={() => onImageClick(
+                message.imageContent?.data || message.imageData!,
+                message.id
+              )}
               style={{
                 maxWidth: '400px',
                 maxHeight: '400px',
@@ -73,7 +79,21 @@ export function MessageBubble({ message, onDeleteMessage, onImageClick }: Messag
               }}
             />
           )}
-          {message.content || (message.imageData ? '' : '[Audio message]')}
+          {message.audioData && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: message.content ? '8px' : '0'
+            }}>
+              <audio
+                controls
+                src={URL.createObjectURL(new Blob([message.audioData], { type: 'audio/wav' }))}
+                style={{ flex: 1 }}
+              />
+            </div>
+          )}
+          {message.content}
           <button
             className="delete-btn"
             onClick={() => onDeleteMessage(message.id)}
