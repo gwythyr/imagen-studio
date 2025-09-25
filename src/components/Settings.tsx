@@ -178,7 +178,7 @@ export function Settings() {
                 fontFamily: 'monospace',
                 color: '#333'
               }}>
-                {maskApiKey(apiKey)}
+                {maskApiKey(apiKey || '')}
               </div>
               <button
                 onClick={handleEdit}

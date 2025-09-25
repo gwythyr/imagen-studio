@@ -28,7 +28,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
       mimeType: 'audio/aac'
     };
 
-    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+    if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
       options.mimeType = 'audio/webm;codecs=opus';
     }
 

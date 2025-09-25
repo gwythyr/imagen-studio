@@ -1,0 +1,120 @@
+import { type Message } from '../types/chat';
+import { formatDate } from '../utils/formatDate';
+
+interface MessageBubbleProps {
+  message: Message;
+  onDeleteMessage: (messageId: string) => void;
+  onImageClick: (imageData: Uint8Array, messageId: string) => void;
+}
+
+export function MessageBubble({ message, onDeleteMessage, onImageClick }: MessageBubbleProps) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: message.role === 'user' ? 'row-reverse' : 'row',
+        gap: '12px'
+      }}
+    >
+      <div style={{
+        width: '32px',
+        height: '32px',
+        borderRadius: '16px',
+        backgroundColor: message.role === 'user' ? (message.sentToAi === false ? '#9e9e9e' : '#1976d2') : '#e0e0e0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '14px',
+        fontWeight: '600',
+        color: message.role === 'user' ? '#ffffff' : '#666',
+        flexShrink: 0
+      }}>
+        {message.role === 'user' ? 'U' : 'AI'}
+      </div>
+
+      <div style={{
+        maxWidth: '70%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px'
+      }}>
+        <div style={{
+          position: 'relative',
+          backgroundColor: message.role === 'user' ? (message.sentToAi === false ? '#9e9e9e' : '#1976d2') : '#f5f5f5',
+          color: message.role === 'user' ? '#ffffff' : '#333',
+          padding: '12px 16px',
+          borderRadius: '18px',
+          borderTopLeftRadius: message.role === 'user' ? '18px' : '4px',
+          borderTopRightRadius: message.role === 'user' ? '4px' : '18px',
+          wordWrap: 'break-word',
+          fontSize: '14px',
+          lineHeight: '1.4'
+        }}
+        onMouseEnter={e => {
+          const deleteBtn = e.currentTarget.querySelector('.delete-btn') as HTMLElement;
+          if (deleteBtn) deleteBtn.style.opacity = '1';
+        }}
+        onMouseLeave={e => {
+          const deleteBtn = e.currentTarget.querySelector('.delete-btn') as HTMLElement;
+          if (deleteBtn) deleteBtn.style.opacity = '0';
+        }}
+        >
+          {message.imageData && (
+            <img
+              src={URL.createObjectURL(new Blob([message.imageData]))}
+              alt="Uploaded image"
+              onClick={() => onImageClick(message.imageData!, message.id)}
+              style={{
+                maxWidth: '400px',
+                maxHeight: '400px',
+                borderRadius: '8px',
+                marginBottom: message.content ? '8px' : '0',
+                cursor: 'pointer'
+              }}
+            />
+          )}
+          {message.content || (message.imageData ? '' : '[Audio message]')}
+          <button
+            className="delete-btn"
+            onClick={() => onDeleteMessage(message.id)}
+            style={{
+              position: 'absolute',
+              top: '4px',
+              right: message.role === 'user' ? '4px' : 'auto',
+              left: message.role === 'user' ? 'auto' : '4px',
+              width: '20px',
+              height: '20px',
+              border: 'none',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(0, 0, 0, 0.1)',
+              color: message.role === 'user' ? '#ffffff' : '#666',
+              cursor: 'pointer',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: '0',
+              transition: 'opacity 0.2s ease',
+              padding: '0'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{
+          fontSize: '11px',
+          color: '#999',
+          textAlign: message.role === 'user' ? 'right' : 'left'
+        }}>
+          {formatDate(message.timestamp)}
+        </div>
+      </div>
+    </div>
+  );
+}

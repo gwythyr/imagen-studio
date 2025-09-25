@@ -4,14 +4,12 @@ import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
 import { Chat } from './components/Chat';
 import { useSession } from './hooks/useSession';
-import { useMessages } from './hooks/useMessages';
 
 function App() {
   const [currentView, setCurrentView] = useState<'sessions' | 'settings'>('sessions');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   const { session, loading: sessionLoading } = useSession(currentSessionId);
-  const { messages, loading: messagesLoading } = useMessages(currentSessionId);
 
   const handleSessionSelect = (sessionId: string) => {
     setCurrentSessionId(sessionId);
@@ -65,7 +63,7 @@ function App() {
           );
         }
 
-        if (sessionLoading || messagesLoading) {
+        if (sessionLoading) {
           return (
             <div style={{
               display: 'flex',
