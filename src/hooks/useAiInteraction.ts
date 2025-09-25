@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, PersonGeneration } from '@google/genai';
 import { type ChatSession, type Message } from '../types/chat';
 import { LlmService } from '../services/llmService';
 
@@ -53,6 +52,7 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       if (responseData.comment) {
         await addMessage(responseData.comment, 'assistant');
       }
+      await refreshMessages();
 
       if (responseData.imageGenerationPrompt) {
         await db.addMessage(session.id, {
@@ -65,6 +65,21 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
 
       await db.markSessionMessagesAsSent(session.id);
       await refreshMessages();
+
+      if (responseData.imageGenerationPrompt) {
+        const imageData = await LlmService.generateImage(apiKey, responseData.imageGenerationPrompt);
+
+        if (imageData) {
+          await db.addMessage(session.id, {
+            type: 'image' as const,
+            role: 'assistant' as const,
+            timestamp: Date.now(),
+            imageData,
+          });
+
+          await refreshMessages();
+        }
+      }
     } finally {
       setIsApiInProgress(false);
     }

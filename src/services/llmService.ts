@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type, PersonGeneration } from '@google/genai';
 import { type Message } from '../types/chat';
 import { GeminiMessageProcessor } from '../lib/geminiMessageProcessor';
 import { AI_INTERACTION_SYSTEM_PROMPT } from '../prompts/aiInteractionPrompt';
@@ -66,5 +66,32 @@ export class LlmService {
     }
 
     return JSON.parse(response.text) as LlmResponse;
+  }
+
+  static async generateImage(apiKey: string, prompt: string): Promise<Uint8Array | null> {
+    const ai = new GoogleGenAI({ apiKey });
+
+    const response = await ai.models.generateImages({
+      model: 'models/imagen-4.0-fast-generate-001',
+      prompt,
+      config: {
+        numberOfImages: 1,
+        outputMimeType: 'image/jpeg',
+        personGeneration: PersonGeneration.ALLOW_ADULT,
+        aspectRatio: '1:1',
+      },
+    });
+
+    if (!response?.generatedImages?.[0]?.image?.imageBytes) {
+      return null;
+    }
+
+    const base64Data = response.generatedImages[0].image.imageBytes;
+    const binaryString = atob(base64Data);
+    const imageBytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      imageBytes[i] = binaryString.charCodeAt(i);
+    }
+    return imageBytes;
   }
 }
