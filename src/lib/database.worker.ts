@@ -89,6 +89,14 @@ class DatabaseWorker {
   async setGeminiApiKey(apiKey: string): Promise<void> {
     return this.settings.setGeminiApiKey(apiKey);
   }
+
+  async getDatabaseInfo(): Promise<{ filename: string; isOpfs: boolean; isInitialized: boolean }> {
+    return this.conn.getDatabaseInfo();
+  }
+
+  async isUsingOpfs(): Promise<boolean> {
+    return this.conn.isUsingOpfs();
+  }
 }
 
 const dbWorker = new DatabaseWorker();

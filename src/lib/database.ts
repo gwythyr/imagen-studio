@@ -136,6 +136,14 @@ export class ChatDatabase extends EventTarget implements DatabaseMethods {
     this.dispatchEvent(new CustomEvent('sessionUpdated', { detail: { sessionId, updates } }));
   }
 
+  async getDatabaseInfo(): Promise<{ filename: string; isOpfs: boolean; isInitialized: boolean }> {
+    return this.callWorkerMethod('getDatabaseInfo');
+  }
+
+  async isUsingOpfs(): Promise<boolean> {
+    return this.callWorkerMethod('isUsingOpfs');
+  }
+
   // Cleanup method to terminate worker when done
   destroy(): void {
     if (this.worker) {

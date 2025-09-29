@@ -23,16 +23,30 @@ export class DatabaseConnection {
 
       console.log('Running SQLite3 version', this.sqlite3.version.libVersion);
 
-      // Use OPFS if available, otherwise fallback to memory
-      this.db = 'opfs' in this.sqlite3
-        ? new this.sqlite3.oo1.OpfsDb('/imagen-studio.sqlite3')
-        : new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
+      // Check OPFS availability and create appropriate database
+      const isOpfsAvailable = 'opfs' in this.sqlite3;
+      console.log(`OPFS availability: ${isOpfsAvailable}`);
 
-      console.log(
-        'opfs' in this.sqlite3
-          ? `OPFS is available, created persisted database at ${this.db.filename}`
-          : `OPFS is not available, created transient database ${this.db.filename}`,
-      );
+      if (isOpfsAvailable) {
+        try {
+          console.log('Attempting to create OPFS database...');
+          this.db = new this.sqlite3.oo1.OpfsDb('/imagen-studio.sqlite3');
+          console.log(`✓ OPFS database created successfully at ${this.db.filename}`);
+
+          // Test database connection by performing a simple query
+          this.db.exec('SELECT 1');
+          console.log('✓ OPFS database connection test passed');
+        } catch (opfsError) {
+          console.error('✗ OPFS database creation failed:', opfsError);
+          console.log('Falling back to memory database...');
+          this.db = new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
+          console.warn('⚠️  Using memory database - data will not persist across page reloads!');
+        }
+      } else {
+        console.warn('⚠️  OPFS not available in this browser - using memory database');
+        this.db = new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
+        console.warn('⚠️  Data will not persist across page reloads!');
+      }
 
       // Set pragmas for performance
       this.db.exec(`
@@ -104,5 +118,18 @@ export class DatabaseConnection {
   getDb(): any {
     if (!this.db) throw new Error('Database not initialized');
     return this.db;
+  }
+
+  isUsingOpfs(): boolean {
+    if (!this.db) return false;
+    return this.db.filename && this.db.filename.includes('opfs');
+  }
+
+  getDatabaseInfo(): { filename: string; isOpfs: boolean; isInitialized: boolean } {
+    return {
+      filename: this.db?.filename || 'Not initialized',
+      isOpfs: this.isUsingOpfs(),
+      isInitialized: !!this.db
+    };
   }
 }

@@ -1,14 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Sentry from "@sentry/react";
 import { Layout } from './components/Layout';
 import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
 import { Chat } from './components/Chat';
 import { useSession } from './hooks/useSession';
+import { db } from './lib/database';
 
 function App() {
   const [currentView, setCurrentView] = useState<'sessions' | 'settings'>('sessions');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  // Initialize database early in app lifecycle
+  useEffect(() => {
+    const initDatabase = async () => {
+      try {
+        await db.initialize();
+        const dbInfo = await db.getDatabaseInfo();
+        if (dbInfo.isOpfs) {
+          console.log('✓ Database using OPFS - data will persist across page reloads');
+        } else {
+          console.warn('⚠️ Database using memory storage - data will be lost on page reload!');
+        }
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+      }
+    };
+
+    initDatabase();
+  }, []);
 
   const { session, loading: sessionLoading } = useSession(currentSessionId);
 
@@ -138,34 +158,38 @@ function App() {
   );
 }
 
-export default Sentry.withErrorBoundary(App, {
-  fallback: ({ resetError }) => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-      padding: '20px',
-      textAlign: 'center'
-    }}>
-      <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Something went wrong</h2>
-      <p style={{ color: '#666', marginBottom: '20px' }}>
-        An error occurred. Our team has been notified.
-      </p>
-      <button
-        onClick={resetError}
-        style={{
-          backgroundColor: '#3498db',
-          color: 'white',
-          border: 'none',
-          padding: '10px 20px',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        Try again
-      </button>
-    </div>
-  )
+const ErrorFallback = ({ resetError }: { resetError: () => void }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    padding: '20px',
+    textAlign: 'center'
+  }}>
+    <h2 style={{ color: '#e74c3c', marginBottom: '16px' }}>Something went wrong</h2>
+    <p style={{ color: '#666', marginBottom: '20px' }}>
+      An error occurred. Our team has been notified.
+    </p>
+    <button
+      onClick={resetError}
+      style={{
+        backgroundColor: '#3498db',
+        color: 'white',
+        border: 'none',
+        padding: '10px 20px',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }}
+    >
+      Try again
+    </button>
+  </div>
+);
+
+const AppWithErrorBoundary = Sentry.withErrorBoundary(App, {
+  fallback: ErrorFallback
 });
+
+export default AppWithErrorBoundary;
