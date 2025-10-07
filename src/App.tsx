@@ -4,11 +4,12 @@ import { Layout } from './components/Layout';
 import { SessionsList } from './components/SessionsList';
 import { Settings } from './components/Settings';
 import { Chat } from './components/Chat';
+import { Gallery } from './components/Gallery';
 import { useSession } from './hooks/useSession';
 import { db } from './lib/database';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'sessions' | 'settings'>('sessions');
+  const [currentView, setCurrentView] = useState<'sessions' | 'gallery' | 'settings'>('sessions');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Initialize database early in app lifecycle
@@ -43,6 +44,10 @@ function App() {
   const renderContent = () => {
     if (currentView === 'settings') {
       return <Settings />;
+    }
+
+    if (currentView === 'gallery') {
+      return <Gallery />;
     }
 
     if (currentView === 'sessions') {

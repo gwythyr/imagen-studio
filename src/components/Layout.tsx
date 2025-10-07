@@ -1,7 +1,7 @@
 interface LayoutProps {
   children: React.ReactNode;
-  currentView: 'sessions' | 'settings';
-  onViewChange: (view: 'sessions' | 'settings') => void;
+  currentView: 'sessions' | 'gallery' | 'settings';
+  onViewChange: (view: 'sessions' | 'gallery' | 'settings') => void;
 }
 
 export function Layout({ children, currentView, onViewChange }: LayoutProps) {
@@ -56,6 +56,34 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
             }}
           >
             Sessions
+          </button>
+
+          <button
+            onClick={() => onViewChange('gallery')}
+            style={{
+              padding: '12px 20px',
+              border: 'none',
+              backgroundColor: currentView === 'gallery' ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+              color: currentView === 'gallery' ? '#1976d2' : 'var(--text-secondary)',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: currentView === 'gallery' ? '600' : '400',
+              transition: 'all 0.2s ease',
+              borderLeft: currentView === 'gallery' ? '3px solid #1976d2' : '3px solid transparent'
+            }}
+            onMouseEnter={e => {
+              if (currentView !== 'gallery') {
+                e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (currentView !== 'gallery') {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            Gallery
           </button>
 
           <button

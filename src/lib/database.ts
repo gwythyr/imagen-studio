@@ -103,6 +103,10 @@ export class ChatDatabase extends EventTarget implements DatabaseMethods {
     return this.callWorkerMethod('getImage', imageId);
   }
 
+  async getAllImages(): Promise<ImageRecord[]> {
+    return this.callWorkerMethod('getAllImages');
+  }
+
   async deleteImage(imageId: string): Promise<void> {
     return this.callWorkerMethod('deleteImage', imageId);
   }

@@ -27,7 +27,7 @@ export class ImageService {
     return imageId;
   }
 
-  async get(imageId: string): Promise<ImageRecord | null> {
+  async get(imageId: string): Promise<any[] | null> {
     const db = this.conn.getDb();
     const result = db.exec({
       sql: 'SELECT * FROM images WHERE id = ?',
@@ -35,19 +35,7 @@ export class ImageService {
       returnValue: 'resultRows'
     });
 
-    let image: ImageRecord | null = null;
-    if (result.length > 0) {
-      const row = result[0];
-      image = {
-        id: row[0] as string,
-        data: new Uint8Array(row[1] as ArrayBuffer),
-        mimeType: row[2] as string,
-        filename: row[3] as string | null,
-        size: row[4] as number,
-        createdAt: row[5] as number
-      };
-    }
-    return image;
+    return result.length > 0 ? result[0] : null;
   }
 
   async delete(imageId: string): Promise<void> {
@@ -55,6 +43,14 @@ export class ImageService {
     db.exec({
       sql: 'DELETE FROM images WHERE id = ?',
       bind: [imageId]
+    });
+  }
+
+  async getAllImages(): Promise<any[][]> {
+    const db = this.conn.getDb();
+    return db.exec({
+      sql: 'SELECT * FROM images ORDER BY created_at DESC',
+      returnValue: 'resultRows'
     });
   }
 }

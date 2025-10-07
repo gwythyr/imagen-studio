@@ -22,6 +22,7 @@ export interface DatabaseMethods {
   deleteMessage: (messageId: string) => Promise<void>;
   createImage: (imageData: { data: Uint8Array; mimeType: string; filename?: string; size: number }) => Promise<string>;
   getImage: (imageId: string) => Promise<ImageRecord | null>;
+  getAllImages: () => Promise<ImageRecord[]>;
   deleteImage: (imageId: string) => Promise<void>;
   getSessionStats: (sessionId: string) => Promise<SessionStats>;
   getSetting: (key: string) => Promise<string | null>;

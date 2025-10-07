@@ -51,7 +51,29 @@ class DatabaseWorker {
   }
 
   async getImage(imageId: string): Promise<ImageRecord | null> {
-    return this.images.get(imageId);
+    const row = await this.images.get(imageId);
+    if (!row) return null;
+    
+    return {
+      id: row[0] as string,
+      data: row[1] as Uint8Array,
+      mimeType: row[2] as string,
+      filename: row[3] as string | null,
+      size: row[4] as number,
+      createdAt: row[5] as number
+    };
+  }
+
+  async getAllImages(): Promise<ImageRecord[]> {
+    const rows = await this.images.getAllImages();
+    return rows.map((row: any[]) => ({
+      id: row[0] as string,
+      data: row[1] as Uint8Array,
+      mimeType: row[2] as string,
+      filename: row[3] as string | null,
+      size: row[4] as number,
+      createdAt: row[5] as number
+    }));
   }
 
   async deleteImage(imageId: string): Promise<void> {
