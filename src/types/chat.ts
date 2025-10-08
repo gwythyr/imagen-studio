@@ -38,3 +38,5 @@ export interface ImageRecord {
   size: number;
   createdAt: number;
 }
+
+export type AiWorkflowStage = 'idle' | 'prompt' | 'image';

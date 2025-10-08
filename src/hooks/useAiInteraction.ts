@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { type ChatSession, type Message } from '../types/chat';
+import { type ChatSession, type Message, type AiWorkflowStage } from '../types/chat';
 import { LlmService } from '../services/llmService';
 
 interface UseAiInteractionProps {
@@ -12,12 +12,17 @@ interface UseAiInteractionProps {
 export function useAiInteraction({ session, messages, addMessage, refreshMessages }: UseAiInteractionProps) {
   const [isApiInProgress, setIsApiInProgress] = useState(false);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [workflowStage, setWorkflowStage] = useState<AiWorkflowStage>('idle');
   const apiTimeoutRef = useRef<number | null>(null);
+  const isApiInProgressRef = useRef(false);
+  const isImageGeneratingRef = useRef(false);
 
   const generateImageFromPrompt = async (prompt: string) => {
     if (session.id === 'temp') return;
 
+    setWorkflowStage('image');
     setIsImageGenerating(true);
+    isImageGeneratingRef.current = true;
     try {
       const { db } = await import('../lib/database');
       await db.initialize();
@@ -39,6 +44,10 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       }
     } finally {
       setIsImageGenerating(false);
+      isImageGeneratingRef.current = false;
+      if (!isApiInProgressRef.current) {
+        setWorkflowStage('idle');
+      }
     }
   };
 
@@ -59,6 +68,8 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
     }
 
     setIsApiInProgress(true);
+    isApiInProgressRef.current = true;
+    setWorkflowStage('prompt');
 
     try {
       const { db } = await import('../lib/database');
@@ -68,6 +79,10 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       if (!apiKey) {
         console.log('No API key found. Cannot proceed.');
         setIsApiInProgress(false);
+        isApiInProgressRef.current = false;
+        if (!isImageGeneratingRef.current) {
+          setWorkflowStage('idle');
+        }
         return;
       }
 
@@ -98,6 +113,10 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
       }
     } finally {
       setIsApiInProgress(false);
+      isApiInProgressRef.current = false;
+      if (!isImageGeneratingRef.current) {
+        setWorkflowStage('idle');
+      }
     }
   };
 
@@ -113,6 +132,7 @@ export function useAiInteraction({ session, messages, addMessage, refreshMessage
     handleAiClick,
     isApiInProgress,
     generateImageFromPrompt,
-    isImageGenerating
+    isImageGenerating,
+    workflowStage
   };
 }

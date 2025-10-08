@@ -7,6 +7,7 @@ import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { ImageModal } from './ImageModal';
 import { formatDate } from '../utils/formatDate';
+import { AiWorkflowStatus } from './AiWorkflowStatus';
 
 interface ChatProps {
   session: ChatSession;
@@ -14,7 +15,16 @@ interface ChatProps {
 }
 
 export function Chat({ session, onSessionCreated }: ChatProps) {
-  const { messages, deleteMessage, handleMessage, handleAiClick, isApiInProgress, generateImageFromPrompt, isImageGenerating } = useChat({ session, onSessionCreated });
+  const {
+    messages,
+    deleteMessage,
+    handleMessage,
+    handleAiClick,
+    isApiInProgress,
+    generateImageFromPrompt,
+    isImageGenerating,
+    workflowStage
+  } = useChat({ session, onSessionCreated });
   const title = useChatTitle({ sessionId: session.id, initialTitle: session.title });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
@@ -99,6 +109,14 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
         ))}
         <div ref={messagesEndRef} />
       </div>
+
+      {workflowStage !== 'idle' && (
+        <AiWorkflowStatus
+          stage={workflowStage}
+          isPromptActive={isApiInProgress}
+          isImageActive={isImageGenerating}
+        />
+      )}
 
       <ChatInput
         onSubmitText={handleSubmitText}
