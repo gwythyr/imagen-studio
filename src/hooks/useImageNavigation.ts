@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface UseImageNavigationProps {
   currentIndex: number;
   setCurrentIndex: (index: number) => void;

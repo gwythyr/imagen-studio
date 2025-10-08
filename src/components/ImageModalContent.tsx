@@ -1,4 +1,3 @@
-import React from 'react';
 import { useObjectURL } from '../hooks/useObjectURL';
 import type { ImageRecord } from '../types/chat';
 

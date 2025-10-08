@@ -1,4 +1,3 @@
-import { type ImageRecord } from '../../types/chat';
 import { DatabaseConnection } from './connection';
 
 export class ImageService {
