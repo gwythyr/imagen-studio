@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { useChatImageModal } from '../hooks/useChatImageModal';
 import { type ChatSession } from '../types/chat';
 import { useChat } from '../hooks/useChat';
 import { useChatTitle } from '../hooks/useChatTitle';
@@ -15,8 +16,16 @@ interface ChatProps {
 export function Chat({ session, onSessionCreated }: ChatProps) {
   const { messages, deleteMessage, handleMessage, handleAiClick, isApiInProgress, generateImageFromPrompt, isImageGenerating } = useChat({ session, onSessionCreated });
   const title = useChatTitle({ sessionId: session.id, initialTitle: session.title });
-  const [imageModal, setImageModal] = useState<{ data: Uint8Array; messageId: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const {
+    imageRecords,
+    isModalOpen,
+    currentImageIndex,
+    openModalForMessage,
+    closeModal,
+    goToNext,
+    goToPrevious
+  } = useChatImageModal(messages);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,8 +35,8 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
     scrollToBottom();
   }, [messages]);
 
-  const handleImageClick = (imageData: Uint8Array, messageId: string) => {
-    setImageModal({ data: imageData, messageId });
+  const handleImageClick = (messageId: string) => {
+    openModalForMessage(messageId);
   };
 
   const handleSubmitText = (content: string) => {
@@ -41,16 +50,6 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
   const handleSubmitImage = (imageData: Uint8Array, mimeType: string) => {
     handleMessage({ imageData, mimeType });
   };
-
-  useEffect(() => {
-    if (imageModal) {
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [imageModal]);
 
   return (
     <div style={{
@@ -111,11 +110,13 @@ export function Chat({ session, onSessionCreated }: ChatProps) {
         disabled={session.id === 'temp'}
       />
 
-      {imageModal && (
+      {isModalOpen && imageRecords.length > 0 && (
         <ImageModal
-          imageData={imageModal.data}
-          messageId={imageModal.messageId}
-          onClose={() => setImageModal(null)}
+          images={imageRecords}
+          currentIndex={currentImageIndex}
+          onNext={goToNext}
+          onPrevious={goToPrevious}
+          onClose={closeModal}
         />
       )}
     </div>

@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import { useAudioRecording } from '../hooks/useAudioRecording';
+import { ChatInputButton } from './ChatInputButton';
 
 interface ChatInputProps {
   onSubmitText: (content: string) => void;
@@ -11,6 +13,30 @@ interface ChatInputProps {
   disabled: boolean;
 }
 
+const containerStyle: CSSProperties = {
+  padding: '20px',
+  borderTop: '1px solid #dee2e6',
+  backgroundColor: '#ffffff'
+};
+
+const controlsRowStyle: CSSProperties = {
+  display: 'flex',
+  gap: '12px',
+  alignItems: 'flex-end'
+};
+
+const textInputBaseStyle: CSSProperties = {
+  flex: 1,
+  padding: '12px 16px',
+  border: '1px solid #dee2e6',
+  borderRadius: '24px',
+  fontSize: '14px',
+  outline: 'none',
+  resize: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.2s ease'
+};
+
 export function ChatInput({
   onSubmitText,
   onSubmitAudio,
@@ -21,6 +47,7 @@ export function ChatInput({
   disabled
 }: ChatInputProps) {
   const [inputValue, setInputValue] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isRecording, audioData, startRecording, stopRecording, clearRecording } = useAudioRecording();
 
@@ -71,17 +98,16 @@ export function ChatInput({
     }
   }, [audioData, isRecording, onSubmitAudio, clearRecording]);
 
+  const inputStyle = useMemo(() => ({
+    ...textInputBaseStyle,
+    borderColor: isInputFocused ? '#1976d2' : '#dee2e6',
+    opacity: isAnyOperationInProgress ? 0.5 : 1,
+    cursor: isAnyOperationInProgress ? 'not-allowed' : 'text'
+  }), [isAnyOperationInProgress, isInputFocused]);
+
   return (
-    <div style={{
-      padding: '20px',
-      borderTop: '1px solid #dee2e6',
-      backgroundColor: '#ffffff'
-    }}>
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        alignItems: 'flex-end'
-      }}>
+    <div style={containerStyle}>
+      <div style={controlsRowStyle}>
         <input
           type="text"
           placeholder="Type a message..."
@@ -89,119 +115,28 @@ export function ChatInput({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isAnyOperationInProgress}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            border: '1px solid #dee2e6',
-            borderRadius: '24px',
-            fontSize: '14px',
-            outline: 'none',
-            resize: 'none',
-            fontFamily: 'inherit',
-            opacity: isAnyOperationInProgress ? '0.5' : '1',
-            cursor: isAnyOperationInProgress ? 'not-allowed' : 'text'
-          }}
-          onFocus={e => {
-            if (!isAnyOperationInProgress) {
-              e.target.style.borderColor = '#1976d2';
-            }
-          }}
-          onBlur={e => {
-            e.target.style.borderColor = '#dee2e6';
-          }}
+          style={inputStyle}
+          onFocus={() => setIsInputFocused(true)}
+          onBlur={() => setIsInputFocused(false)}
         />
 
-        <button
+        <ChatInputButton
+          icon="→"
+          label="Send message"
           onClick={handleSubmit}
           disabled={!inputValue.trim() || isAnyOperationInProgress}
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb',
-            color: (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: (!inputValue.trim() || isAnyOperationInProgress) ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px',
-            fontWeight: '500',
-            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: (!inputValue.trim() || isAnyOperationInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)',
-            transform: 'scale(1)',
-          }}
-          onMouseEnter={e => {
-            if (inputValue.trim() && !isAnyOperationInProgress) {
-              e.currentTarget.style.backgroundColor = '#1d4ed8';
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,99,235,0.4)';
-            }
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = (!inputValue.trim() || isAnyOperationInProgress) ? 'rgba(0,0,0,0.1)' : '#2563eb';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = (!inputValue.trim() || isAnyOperationInProgress) ? 'none' : '0 2px 8px rgba(37,99,235,0.3)';
-          }}
-          onMouseDown={e => {
-            if (inputValue.trim() && !isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }
-          }}
-          onMouseUp={e => {
-            if (inputValue.trim() && !isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
-          }}
-        >
-          →
-        </button>
+          variant="send"
+          fontSize="20px"
+        />
 
-        <button
+        <ChatInputButton
+          icon="●"
+          label={isRecording ? 'Stop recording' : 'Start recording'}
           onClick={handleRecordClick}
           disabled={isAnyOperationInProgress}
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b',
-            color: isAnyOperationInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: isAnyOperationInProgress ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            fontWeight: '500',
-            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: isAnyOperationInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)',
-            transform: 'scale(1)',
-          }}
-          onMouseEnter={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.backgroundColor = isRecording ? '#dc2626' : '#475569';
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = isRecording ? '0 4px 12px rgba(239,68,68,0.4)' : '0 4px 12px rgba(100,116,139,0.4)';
-            }
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : isRecording ? '#ef4444' : '#64748b';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = isAnyOperationInProgress ? 'none' : isRecording ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 8px rgba(100,116,139,0.3)';
-          }}
-          onMouseDown={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }
-          }}
-          onMouseUp={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
-          }}
-        >
-          ●
-        </button>
+          variant="record"
+          active={isRecording}
+        />
 
         <input
           type="file"
@@ -212,97 +147,22 @@ export function ChatInput({
           disabled={isAnyOperationInProgress}
         />
 
-        <button
+        <ChatInputButton
+          icon="+"
+          label="Upload image"
           onClick={() => fileInputRef.current?.click()}
           disabled={isAnyOperationInProgress}
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : '#10b981',
-            color: isAnyOperationInProgress ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: isAnyOperationInProgress ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            fontWeight: '500',
-            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: isAnyOperationInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)',
-            transform: 'scale(1)',
-          }}
-          onMouseEnter={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.backgroundColor = '#059669';
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.4)';
-            }
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? 'rgba(0,0,0,0.1)' : '#10b981';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = isAnyOperationInProgress ? 'none' : '0 2px 8px rgba(16,185,129,0.3)';
-          }}
-          onMouseDown={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }
-          }}
-          onMouseUp={e => {
-            if (!isAnyOperationInProgress) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
-          }}
-        >
-          +
-        </button>
+          variant="image"
+        />
 
-        <button
+        <ChatInputButton
+          icon={isAnyOperationInProgress ? '◆' : '✨'}
+          label="Ask AI"
           onClick={onAiClick}
           disabled={disabled}
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            border: 'none',
-            backgroundColor: disabled ? 'rgba(0,0,0,0.1)' : isAnyOperationInProgress ? '#f59e0b' : '#6366f1',
-            color: disabled ? 'rgba(0,0,0,0.4)' : '#ffffff',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            fontWeight: '500',
-            transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-            boxShadow: disabled ? 'none' : isAnyOperationInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)',
-            transform: 'scale(1)',
-          }}
-          onMouseEnter={e => {
-            if (!disabled) {
-              e.currentTarget.style.backgroundColor = isAnyOperationInProgress ? '#d97706' : '#4f46e5';
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = isAnyOperationInProgress ? '0 4px 12px rgba(245,158,11,0.4)' : '0 4px 12px rgba(99,102,241,0.4)';
-            }
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = disabled ? 'rgba(0,0,0,0.1)' : isAnyOperationInProgress ? '#f59e0b' : '#6366f1';
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = disabled ? 'none' : isAnyOperationInProgress ? '0 2px 8px rgba(245,158,11,0.3)' : '0 2px 8px rgba(99,102,241,0.3)';
-          }}
-          onMouseDown={e => {
-            if (!disabled) {
-              e.currentTarget.style.transform = 'scale(0.95)';
-            }
-          }}
-          onMouseUp={e => {
-            if (!disabled) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }
-          }}
-        >
-          {isAnyOperationInProgress ? '◆' : '✨'}
-        </button>
+          variant="ai"
+          busy={isAnyOperationInProgress}
+        />
       </div>
     </div>
   );

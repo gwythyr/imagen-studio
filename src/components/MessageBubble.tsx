@@ -4,7 +4,7 @@ import { formatDate } from '../utils/formatDate';
 interface MessageBubbleProps {
   message: Message;
   onDeleteMessage: (messageId: string) => void;
-  onImageClick: (imageData: Uint8Array, messageId: string) => void;
+  onImageClick: (messageId: string) => void;
   onGenerateImage?: (prompt: string) => void;
   isImageGenerating?: boolean;
 }
@@ -70,10 +70,7 @@ export function MessageBubble({ message, onDeleteMessage, onImageClick, onGenera
                 { type: message.imageContent?.mimeType || 'image/jpeg' }
               ))}
               alt="Uploaded image"
-              onClick={() => onImageClick(
-                message.imageContent?.data || message.imageData!,
-                message.id
-              )}
+              onClick={() => onImageClick(message.id)}
               style={{
                 maxWidth: '400px',
                 maxHeight: '400px',

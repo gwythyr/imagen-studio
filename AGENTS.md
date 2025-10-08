@@ -1,35 +1,20 @@
-# AGENTS.md
+# Repository Guidelines
 
-This file provides guidance to agents when working with code in this repository.
+## Project Structure & Module Organization
+The React client lives in `src/`, with feature components paired to hooks under `src/hooks/` to orchestrate data coming from services. Database access must stay inside the Web Worker at `src/lib/database.worker.ts`, while the services in `src/lib/database/` expose raw SQLite rows for downstream transformation. Shared chat contracts belong in `src/types/chat.ts`, and Gemini streaming is handled in `src/lib/geminiMessageProcessor.ts`. Keep `public/sql-wasm.wasm` and `public/coi-serviceworker.js` versioned; together with the `/imagen-studio/` base in `vite.config.ts` they enable OPFS persistence across GitHub Pages deployments.
 
-## Critical Architecture
+## Build, Test, and Development Commands
+- `npm install` – install project dependencies and the SQLite WASM bundle.
+- `npm run dev` – start the Vite dev server with the COOP service worker.
+- `npm run build` – type-check then produce the production bundle under `dist/`.
+- `npm run preview` – serve the built bundle locally to mirror GitHub Pages.
+- `npm run lint` – run ESLint across the workspace.
 
-- SQLite WASM database runs in Web Worker (`src/lib/database.worker.ts`) - ALL database operations must go through worker
-- OPFS (Origin Private File System) persistence requires COOP headers - handled by `public/coi-serviceworker.js`
-- Database services return raw data - NO mapping/transformation in services (violates project rules)
-- Use `crypto.randomUUID()` for all ID generation (sessions, messages)
-- `vite.config.ts` base path set to `/imagen-studio/` for GitHub Pages deployment
+## Coding Style & Naming Conventions
+Use TypeScript modules with ES imports, two-space indentation, and semicolons omitted to match the existing source. React components and hooks follow `PascalCase` and `useCamelCase` respectively, while workers and services end with `.worker.ts` and `Service.ts`. Always reuse the interfaces in `src/types/chat.ts` rather than inlining shapes, and generate IDs with `crypto.randomUUID()`. Avoid try/catch; allow errors to surface so the calling hook or boundary can decide how to recover.
 
-## Non-Standard Patterns
+## Testing Guidelines
+Automated tests are not yet wired in; when introducing them, colocate `*.test.ts` alongside the feature or service and drive worker interactions with Vitest’s browser-compatible runners. Exercise new hooks through scenario-based tests that mock structured worker messages, and verify OPFS persistence manually in Chrome with the Application tab until headless coverage exists. Document any limitations in the pull request so regression checks remain reproducible.
 
-- Images stored as BLOBs in SQLite with base64 encoding/decoding in `ImageService`
-- Worker communication uses structured message format with `type` and `payload`
-- Database connection MUST be initialized before any service operations
-- No try/catch blocks - errors bubble up naturally (project convention)
-- Service layer strictly separated from data transformation (done in hooks/components)
-- Content sanitization in `MessageService` removes null bytes and unicode replacement chars
-
-## Critical File Locations
-
-- `src/types/chat.ts` - Core TypeScript interfaces (use these, no inline types)
-- `src/lib/database/` - Database services (SessionService, MessageService, ImageService, SettingsService)
-- `src/hooks/` - Custom hooks for reactive data binding with services
-- `src/lib/geminiMessageProcessor.ts` - Handles Gemini API response streaming and processing
-
-## Development Setup
-
-- SQLite WASM file must be in `public/sql-wasm.wasm`
-- Service worker required for COOP headers in development
-- Direct Gemini API calls from browser (no backend proxy)
-- Worker format set to 'es' in vite config for proper ES module support
-- `@sqlite.org/sqlite-wasm` excluded from Vite optimization
+## Commit & Pull Request Guidelines
+Follow the short, imperative commit style already in history (e.g., `fix build`, `add opfs headers`). Squash or rebase before opening a PR, and describe the observable change, affected modules, and manual checks performed. Link issues, upload UI screenshots or logs when behavior changes, and call out database migrations or worker protocol updates so reviewers can retest with a clean profile.
