@@ -1,9 +1,11 @@
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
+import sqliteWasmUrl from '@sqlite.org/sqlite-wasm/sqlite3.wasm?url';
 
 export class DatabaseConnection {
   private db: any = null;
   private sqlite3: any = null;
   private initPromise: Promise<void> | null = null;
+  private usingOpfs = false;
 
   async initialize(): Promise<void> {
     if (this.initPromise) return this.initPromise;
@@ -19,6 +21,13 @@ export class DatabaseConnection {
       this.sqlite3 = await sqlite3InitModule({
         print: console.log,
         printErr: console.error,
+        locateFile: (filename: string) => {
+          if (filename === 'sqlite3.wasm') {
+            return sqliteWasmUrl;
+          }
+
+          return filename;
+        },
       });
 
       console.log('Running SQLite3 version', this.sqlite3.version.libVersion);
@@ -31,6 +40,7 @@ export class DatabaseConnection {
         try {
           console.log('Attempting to create OPFS database...');
           this.db = new this.sqlite3.oo1.OpfsDb('/imagen-studio.sqlite3');
+          this.usingOpfs = true;
           console.log(`✓ OPFS database created successfully at ${this.db.filename}`);
 
           // Test database connection by performing a simple query
@@ -40,11 +50,13 @@ export class DatabaseConnection {
           console.error('✗ OPFS database creation failed:', opfsError);
           console.log('Falling back to memory database...');
           this.db = new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
+          this.usingOpfs = false;
           console.warn('⚠️  Using memory database - data will not persist across page reloads!');
         }
       } else {
         console.warn('⚠️  OPFS not available in this browser - using memory database');
         this.db = new this.sqlite3.oo1.DB('/imagen-studio.sqlite3', 'ct');
+        this.usingOpfs = false;
         console.warn('⚠️  Data will not persist across page reloads!');
       }
 
@@ -121,8 +133,7 @@ export class DatabaseConnection {
   }
 
   isUsingOpfs(): boolean {
-    if (!this.db) return false;
-    return this.db.filename && this.db.filename.includes('opfs');
+    return this.usingOpfs;
   }
 
   getDatabaseInfo(): { filename: string; isOpfs: boolean; isInitialized: boolean } {
